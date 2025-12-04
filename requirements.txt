@@ -1,0 +1,22 @@
+# Core dependencies for both designs
+streamlit
+pandas
+numpy
+plotly
+
+# Design 1 specific dependencies (Interactive Map)
+geopandas
+shapely
+pyarrow
+streamlit-plotly-events
+
+# Design 3 specific dependencies (Price Affordability Finder)
+altair
+python-dotenv
+pgeocode
+
+# Optional: Databricks support (only needed if USE_LOCAL_DATA = False in config_data.py)
+# databricks-sql-connector
+# databricks-sdk
+# requests
+
