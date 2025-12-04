@@ -1,5 +1,5 @@
 # Placeholder file to prevent Streamlit auto-discovery file not found errors
-# This file should not be executed directly - use pages/design1.py instead
+# This file should not be executed directly - use pages/design3.py instead
 
 import streamlit as st
 from pathlib import Path
@@ -12,9 +12,9 @@ st.set_page_config(
 )
 
 # Get the project root and main app path
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent
 main_app_path = project_root / "app.py"
-design1_page_path = project_root / "pages" / "design1.py"
+design3_page_path = project_root / "pages" / "design3.py"
 
 # Display friendly message
 st.info("ℹ️ **Streamlit Limitation**")
@@ -39,10 +39,10 @@ with col1:
             st.info("Please run `streamlit run app.py` from the project root directory.")
 
 with col2:
-    if st.button("🗺️ Go to Interactive Map Explorer", use_container_width=True):
+    if st.button("💰 Go to Price Affordability Finder", use_container_width=True):
         try:
-            if design1_page_path.exists():
-                st.switch_page(str(design1_page_path))
+            if design3_page_path.exists():
+                st.switch_page(str(design3_page_path))
             else:
                 st.info("Please access through the main application.")
         except Exception:
@@ -53,5 +53,6 @@ st.info("""
 **How to use this application:**
 1. Run `streamlit run app.py` from the project root directory
 2. Use the navigation menu at the top (single-click) to access different pages
-3. Click on "Interactive Map Explorer" to view Design 1
+3. Click on "Price Affordability Finder" to view Design 3
 """)
+
