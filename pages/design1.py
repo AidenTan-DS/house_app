@@ -11,7 +11,21 @@ try:
     # Check if desgin1 directory exists
     if not desgin1_path.exists():
         import streamlit as st
-        st.info("⚠️ This page is currently unavailable. Please try again later.")
+        st.error("❌ **Directory Not Found**: The `desgin1` directory could not be found. Please ensure all required files are present.")
+        st.stop()
+    
+    # Check if required files exist
+    required_files = [
+        desgin1_path / "config_data.py",
+        desgin1_path / "geo_utils.py",
+        desgin1_path / "charts.py",
+        desgin1_path / "events.py",
+    ]
+    
+    missing_files = [f for f in required_files if not f.exists()]
+    if missing_files:
+        import streamlit as st
+        st.error(f"❌ **Missing Required Files**: The following files are missing from the `desgin1` directory:\n- " + "\n- ".join([str(f.name) for f in missing_files]))
         st.stop()
 
     # Remove any conflicting paths from sys.path first
@@ -880,11 +894,30 @@ try:
                     else:
                         st.caption("No historical data available for this metro.")
 
+except FileNotFoundError as e:
+    import streamlit as st
+    error_msg = str(e)
+    # Silently ignore errors about desgin1/app.py (which doesn't exist and is intentionally ignored)
+    if "desgin1/app.py" in error_msg or "desgin1\\app.py" in error_msg or "desgin1/app.py" in error_msg.replace("\\", "/"):
+        # This is expected - Streamlit may try to auto-discover this file, but it's intentionally ignored
+        # Just continue loading the page normally
+        pass
+    else:
+        st.error(f"❌ **File Not Found Error**: {error_msg}\n\nPlease ensure all required files are present in the `desgin1` directory.")
+        st.stop()
+except Exception as e:
+    import streamlit as st
+    import traceback
+    st.error(f"❌ **Error Loading Design 1**: {str(e)}")
+    with st.expander("Error Details"):
+        st.code(traceback.format_exc())
+    st.stop()
 finally:
     # Restore original working directory
     try:
         # original_cwd should be available from the outer scope
-        os.chdir(original_cwd)
+        if 'original_cwd' in locals() and original_cwd:
+            os.chdir(original_cwd)
     except (NameError, OSError):
         # If original_cwd is not defined or chdir fails, just pass
         pass

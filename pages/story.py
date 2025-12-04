@@ -26,9 +26,11 @@ for path in paths_to_remove:
 if sys.path[0] != str(story_path):
     sys.path.insert(0, str(story_path))
 
-# Change to story directory to handle relative paths
+# Store original working directory but don't change it
+# Use absolute paths instead to avoid issues with os.chdir
 original_cwd = os.getcwd()
-os.chdir(str(story_path))
+# Note: We don't change directory to avoid path issues in Streamlit Cloud
+# All file paths should be absolute or relative to project_root
 
 try:
     import streamlit as st
@@ -103,12 +105,34 @@ try:
     st.caption("Explore the data story behind housing affordability trends across U.S. metropolitan areas")
 
     # ---- load & prep data ----
-    raw = load_raw_data()
-    df = add_derived_columns(raw)
-    comp = composite_series(df)
-    summary = yearly_metro_summary(df)
-    counts = affordability_counts_by_year(summary)
-    year_latest = latest_year(summary)
+    try:
+        raw = load_raw_data()
+        if raw.empty:
+            st.error("❌ **Data Loading Error**: The data file is empty. Please check that `story/data/HouseTS_reduced.csv` exists and contains data.")
+            st.stop()
+        df = add_derived_columns(raw)
+        comp = composite_series(df)
+        summary = yearly_metro_summary(df)
+        counts = affordability_counts_by_year(summary)
+        year_latest = latest_year(summary)
+    except FileNotFoundError as e:
+        st.error(f"""
+        ❌ **Data File Not Found**
+        
+        Unable to load the required data file. Please ensure:
+        - The file `story/data/HouseTS_reduced.csv` exists
+        - The file path is correct
+        - File permissions are set correctly
+        
+        **Technical details:** {str(e)}
+        """)
+        st.stop()
+    except Exception as e:
+        st.error(f"❌ **Data Loading Error**: {str(e)}")
+        import traceback
+        with st.expander("Error Details"):
+            st.code(traceback.format_exc())
+        st.stop()
 
     # ---- tabs / chapters ----
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -327,6 +351,11 @@ except Exception as e:
     with st.expander("Error Details"):
         st.code(traceback.format_exc())
 finally:
-    # Restore original working directory
-    os.chdir(original_cwd)
+    # Restore original working directory (only if we changed it)
+    # Since we don't use os.chdir anymore, this is just for safety
+    try:
+        if original_cwd and os.getcwd() != original_cwd:
+            os.chdir(original_cwd)
+    except Exception:
+        pass  # Ignore errors when restoring directory
 
