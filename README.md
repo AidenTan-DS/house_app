@@ -1,17 +1,17 @@
 # 🏡 House & Browse - Housing Affordability Dashboard
 
-一个交互式的美国住房可负担性数据可视化仪表板，包含两个不同的设计。
+An interactive U.S. housing affordability data visualization dashboard with two different designs.
 
-## 📋 项目结构
+## 📋 Project Structure
 
 ```
 DATA511 project/
-├── app.py                    # 主应用入口（包含导航）
+├── app.py                    # Main application entry (includes navigation)
 ├── pages/
-│   ├── intro.py             # 介绍页面
-│   ├── design1.py           # Design 1: 交互式地图探索器
-│   └── design2.py           # Design 2: 时间序列对比
-├── desgin1/                 # Design 1 的源代码和数据
+│   ├── intro.py             # Introduction page
+│   ├── design1.py           # Design 1: Interactive Map Explorer
+│   └── design2.py           # Design 2: Time Series Comparison
+├── desgin1/                 # Design 1 source code and data
 │   ├── app.py
 │   ├── charts.py
 │   ├── config_data.py
@@ -21,113 +21,112 @@ DATA511 project/
 │       ├── house_ts_agg.csv
 │       ├── cbsa_shapes.zip
 │       └── zcta_shapes.zip
-├── design2/                  # Design 2 的源代码和数据
+├── design2/                  # Design 2 source code and data
 │   ├── design2.py
 │   ├── home.py
 │   └── HouseTS.csv
-└── requirements.txt         # 项目依赖
+└── requirements.txt         # Project dependencies
 ```
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 安装依赖
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 运行应用
+### Run Application
 
 ```bash
 streamlit run app.py
 ```
 
-应用将在浏览器中打开，默认地址为 `http://localhost:8501`
+The application will open in your browser at `http://localhost:8501` by default.
 
-## 🎯 功能说明
+## 🎯 Features
 
-### 🏠 Intro 页面
-- 项目介绍
-- 两个设计的说明
-- 价格收入比（PTI）的计算方法
-- 参考文献
+### 🏠 Intro Page
+- Project introduction
+- Description of the two designs
+- Price-to-Income Ratio (PTI) calculation method
+- References
 
-### 🗺️ Design 1: 交互式地图探索器
-**主要功能：**
-- **Metro 级别可视化**：交互式 choropleth 地图
-- **钻取功能**：从 Metro 区域钻取到 ZIP 代码
-- **多种指标**：价格收入比（PTI）和中位数售价
-- **历史趋势**：单个 ZIP 代码的时间序列分析
-- **地理探索**：可点击的地图
+### 🗺️ Design 1: Interactive Map Explorer
+**Key Features:**
+- **Metro-level Visualization**: Interactive choropleth map
+- **Drill-down Functionality**: Drill down from Metro areas to ZIP codes
+- **Multiple Metrics**: Price-to-Income Ratio (PTI) and median sale price
+- **Historical Trends**: Time series analysis for individual ZIP codes
+- **Geographic Exploration**: Clickable map
 
-**使用方法：**
-1. 使用顶部的控制面板选择年份和指标
-2. 在地图上点击 Metro 区域查看 ZIP 代码详情
-3. 点击 ZIP 代码查看详细指标和历史趋势
+**How to Use:**
+1. Use the control panel at the top to select year and metric
+2. Click on Metro areas on the map to view ZIP code details
+3. Click on ZIP codes to view detailed metrics and historical trends
 
-### 📊 Design 2: 时间序列对比
-**主要功能：**
-- **多城市对比**：价格收入比的时间序列对比
-- **可负担性等级可视化**：带颜色编码的等级带
-- **交互式选择**：可选择多个大都市区
-- **年度分析**：2012-2023 年的年度变化
+### 📊 Design 2: Time Series Comparison
+**Key Features:**
+- **Multi-city Comparison**: Time series comparison of price-to-income ratios
+- **Affordability Level Visualization**: Color-coded level bands
+- **Interactive Selection**: Select multiple metropolitan areas
+- **Annual Analysis**: Yearly changes from 2012-2023
 
-**使用方法：**
-1. 在左侧面板选择要对比的大都市区
-2. 图表会自动更新显示选中的城市
-3. 悬停查看详细数据
+**How to Use:**
+1. Select metropolitan areas to compare in the left panel
+2. Charts will automatically update to show selected cities
+3. Hover to view detailed data
 
-## 📊 数据说明
+## 📊 Data Description
 
-### 数据源
-- **HouseTS Dataset**: 来自 Kaggle，包含 30 个主要美国大都市区 2012-2023 年的数据
-- **Shapefiles**: CBSA 和 ZCTA 边界数据用于地图可视化
+### Data Sources
+- **HouseTS Dataset**: From Kaggle, containing data for 30 major U.S. metropolitan areas from 2012-2023
+- **Shapefiles**: CBSA and ZCTA boundary data for map visualization
 
-### 指标定义
+### Metric Definitions
 
-**价格收入比（PTI）**
+**Price-to-Income Ratio (PTI)**
 ```
 PTI = median_sale_price / (per_capita_income × 2.51)
 ```
-其中 2.51 是美国家庭中位数规模。
+Where 2.51 is the median U.S. household size.
 
-**可负担性等级：**
-- **0.0-3.0**: 可负担 🟢
-- **3.1-4.0**: 中等不可负担 🟡
-- **4.1-5.0**: 严重不可负担 🟠
-- **5.1-8.9**: 极度不可负担 🔴
-- **9.0+**: 不可能负担 ⚫
+**Affordability Levels:**
+- **0.0-3.0**: Affordable 🟢
+- **3.1-4.0**: Moderately Unaffordable 🟡
+- **4.1-5.0**: Seriously Unaffordable 🟠
+- **5.1-8.9**: Severely Unaffordable 🔴
+- **9.0+**: Impossibly Unaffordable ⚫
 
-## 🛠️ 技术栈
+## 🛠️ Tech Stack
 
-- **Streamlit**: Web 应用框架
-- **Plotly**: 交互式图表和地图
-- **GeoPandas**: 地理空间数据处理
-- **Pandas**: 数据处理
-- **NumPy**: 数值计算
+- **Streamlit**: Web application framework
+- **Plotly**: Interactive charts and maps
+- **GeoPandas**: Geospatial data processing
+- **Pandas**: Data processing
+- **NumPy**: Numerical computation
 
-## 📚 参考文献
+## 📚 References
 
-- **数据集**: shengkunwang. (2025). *HouseTS Dataset*. Kaggle
-- **可负担性等级**: Cox, Wendell (2025). *Demographia International Housing Affordability, 2025 Edition*. Center for Demographics and Policy
+- **Dataset**: shengkunwang. (2025). *HouseTS Dataset*. Kaggle
+- **Affordability Levels**: Cox, Wendell (2025). *Demographia International Housing Affordability, 2025 Edition*. Center for Demographics and Policy
 
-## 🔧 故障排除
+## 🔧 Troubleshooting
 
-### Design 1 无法加载数据
-- 确保 `desgin1/data/house_ts_agg.csv` 文件存在
-- 检查 shapefile ZIP 文件是否完整
+### Design 1 Cannot Load Data
+- Ensure `desgin1/data/house_ts_agg.csv` file exists
+- Check if shapefile ZIP files are complete
 
-### Design 2 无法加载数据
-- 确保 `design2/HouseTS.csv` 文件存在
-- 检查文件路径是否正确
+### Design 2 Cannot Load Data
+- Ensure `design2/HouseTS.csv` file exists
+- Check if the file path is correct
 
-### 地图不显示
-- 确保已安装所有依赖（特别是 geopandas 和 shapely）
-- 检查 shapefile 文件是否完整
+### Map Not Displaying
+- Ensure all dependencies are installed (especially geopandas and shapely)
+- Check if shapefile files are complete
 
-## 📝 注意事项
+## 📝 Notes
 
-- Design 1 需要较大的内存来处理地理数据
-- 首次加载地图可能需要一些时间
-- 建议使用现代浏览器以获得最佳体验
-
+- Design 1 requires significant memory to process geospatial data
+- Initial map loading may take some time
+- A modern browser is recommended for the best experience
