@@ -1,0 +1,15 @@
+databricks-sql-connector
+streamlit
+streamlit-plotly-events
+pandas
+numpy
+plotly
+shapely
+geopandas
+pyarrow
+databricks-sql-connector
+databricks-sdk
+requests
+
+
+

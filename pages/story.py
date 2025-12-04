@@ -81,25 +81,26 @@ try:
     metro_snapshot_bar = charts_module.metro_snapshot_bar
     affordability_bands_with_us_ratio = charts_module.affordability_bands_with_us_ratio
 
-    # Page title (parent app handles navigation)
-    st.title("📖 Housing Affordability Story")
-    st.caption("Explore the data story behind housing affordability trends across U.S. metropolitan areas")
-
     # ----- GLOBAL STYLE FIXES -----
     st.markdown(
         """
         <style>
         .block-container {
-            padding-top: 0.2rem !important;
+            padding-top: 3rem !important;
         }
         h1 {
             margin-top: 0rem !important;
-            margin-bottom: 0.0rem !important;
+            margin-bottom: 0.5rem !important;
+            padding-top: 1rem !important;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
+
+    # Page title (parent app handles navigation)
+    st.title("📖 Housing Affordability Story")
+    st.caption("Explore the data story behind housing affordability trends across U.S. metropolitan areas")
 
     # ---- load & prep data ----
     raw = load_raw_data()
