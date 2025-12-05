@@ -7,6 +7,31 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# Add CSS to align navigation bar to the right with text margins
+st.markdown("""
+<style>
+    /* Match navigation container to block-container dimensions for alignment */
+    [data-testid="stNavigation"] {
+        max-width: min(1440px, 100%) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 5rem !important;
+        padding-right: 5rem !important;
+    }
+    
+    /* Right-align navigation items */
+    [data-testid="stNavigation"] nav,
+    [data-testid="stNavigation"] > nav,
+    [data-testid="stNavigation"] nav > div,
+    [data-testid="stNavigation"] nav > ul {
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Define pages for navigation
 pages = [
     st.Page("pages/intro.py", title="Intro", icon="🏠"),
