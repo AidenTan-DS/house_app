@@ -14,6 +14,7 @@ add_to_path(design2_path)
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 # Hide navigation bar on design pages
 st.markdown("""
@@ -35,7 +36,7 @@ st.title("📊 Time Series Comparison")
 st.markdown(
     """
     <p style="color: #6b7280; font-size: 0.875rem; margin-top: -1rem; margin-bottom: 1rem;">
-        Compare <span title="PTI Formula: Median Sale Price / Median Household Income. Lower values indicate better affordability." style="cursor: help; text-decoration: underline; text-decoration-style: dotted;">Price-to-Income Ratio</span> across multiple metropolitan areas over time
+        Compare <span class="pti-tooltip">Price-to-Income Ratio<span class="tooltiptext"><strong>PTI = Median Sale Price ÷ Median Household Income</strong></span></span> across multiple metropolitan areas over time
     </p>
     """,
     unsafe_allow_html=True
@@ -46,6 +47,73 @@ st.markdown(
     <style>
     [data-testid="stVirtualDropdown"] > div {
         height: auto !important;
+    }
+    
+    /* Left panel / multiselect sizing + align pills to top */
+    div[data-testid="stMultiSelect"] {
+        height: 471px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    div[data-testid="stMultiSelect"] > div:nth-child(2) {
+        flex: 1 1 auto !important;
+        height: 100% !important;
+    }
+    div[data-testid="stMultiSelect"] div[data-baseweb="select"] {
+        height: 100% !important;
+        min-height: 100% !important;
+        display: flex !important;
+        align-items: flex-start !important;
+    }
+    div[data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+        height: 100% !important;
+        min-height: 100% !important;
+        display: flex !important;
+        align-items: flex-start !important;
+    }
+    
+    /* PTI Tooltip Styles */
+    .pti-tooltip {
+        position: relative;
+        display: inline-block;
+        border-bottom: 1px dotted #4B0082;
+        cursor: help;
+        color: #4B0082;
+        font-weight: 700;
+    }
+    .pti-tooltip .tooltiptext {
+        visibility: hidden;
+        width: 280px;
+        background-color: #333;
+        color: #fff;
+        text-align: left;
+        border-radius: 6px;
+        padding: 8px 12px;
+        position: absolute;
+        z-index: 1000;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -140px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.85rem;
+        font-weight: normal;
+        line-height: 1.4;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .pti-tooltip .tooltiptext::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #333 transparent transparent transparent;
+    }
+    .pti-tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
     }
     </style>
     """,
@@ -191,22 +259,33 @@ with st.expander("How to Use This Tool", expanded=True, icon="💡"):
                 Enjoy exploring! 🚀
                 """)
 
+default_cities = [
+    "Los Angeles-Long Beach-Anaheim",
+    "San Diego-Chula Vista-Carlsbad",
+    "San Francisco-Oakland-Berkeley",
+    "Seattle-Tacoma-Bellevue",
+    "Austin-Round Rock-Georgetown",
+    "Pittsburgh"
+]
+
 if "selected_cities" not in st.session_state:
-    st.session_state.selected_cities = city_order[:5]
+    st.session_state.selected_cities = [c for c in default_cities if c in city_order]
 
 def reset_cities():
-    st.session_state.selected_cities = city_order[:5]
+    st.session_state.selected_cities = [c for c in default_cities if c in city_order]
 
-col1, col2 = st.columns([1.5,5], vertical_alignment="top")
+col1, col2 = st.columns([1.3, 5], vertical_alignment="top")
 with col1:
-    with st.container(border=True, height="content"):
-        st.markdown("<h2 style='font-size: 24px;'>Select Metropolitan Area</h2>", unsafe_allow_html=True)
-        
+    with st.container(border=True):
+        st.markdown(
+            "<h2 style='font-size: 24px; margin-bottom: 0.75rem;'>Select Metropolitan Area</h2>",
+            unsafe_allow_html=True,
+        )
         st.button("Reset to Default", on_click=reset_cities)
         selected_cities = st.multiselect(
             "Metro Areas",
             options=city_order,
-            key="selected_cities"
+            key="selected_cities",
         )
 
     
@@ -221,149 +300,122 @@ else:
 
         price_income = ratio_agg[ratio_agg["city_full"].isin(selected_cities)].copy()
 
-        customdata = price_income[["Per Capita Income", "median_sale_price", "Affordability"]].values
+        customdata = price_income[
+            ["Per Capita Income", "median_sale_price", "Affordability"]
+        ].values
 
-        colors = px.colors.qualitative.Plotly  
-        color_map = {city: colors[i % len(colors)] for i, city in enumerate(selected_cities)}
+        # 1) Build metro line traces with Plotly Express
+        colors = px.colors.qualitative.Plotly
+        color_map = {
+            city: colors[i % len(colors)] for i, city in enumerate(selected_cities)
+        }
 
-        price_income_fig = px.line(
+        px_fig = px.line(
             price_income,
             x="year",
             y="Price_Income_Ratio",
             color="city_full",
             color_discrete_map=color_map,
-            markers=True
+            markers=True,
         )
 
-        for i, trace in enumerate(price_income_fig.data):
+        # attach customdata to metro traces
+        for i, trace in enumerate(px_fig.data):
             city_name = trace.name
             mask = price_income["city_full"] == city_name
-            price_income_fig.data[i].customdata = customdata[mask.values]
+            trace.customdata = customdata[mask.values]
 
-        price_income_fig.add_hline(
-            y=3,
-            line_width=2,
-            line_dash="dash",
-            line_color="silver",
-            annotation_text="0.0-3.0: Affordable",
-            annotation_position="bottom right",
-            annotation_bgcolor="rgba(255,255,255,0.7)"
-        )
+        # 2) New Figure with affordability legend + bands + metro lines
+        price_income_fig = go.Figure()
 
-        price_income_fig.add_hrect(
-            y0=0.0, 
-            y1=3.0, 
-            line_width=0, 
-            fillcolor="Green", 
-            layer="below", 
-            opacity=0.2
-        )
+        # 2a) Affordability legend entries (dummy traces – legend only)
+        affordability_legend = [
+            ("0.0–3.0: Affordable", "rgba(76, 175, 80, 0.30)"),
+            ("3.1–4.0: Moderately Unaffordable", "rgba(255, 193, 7, 0.30)"),
+            ("4.1–5.0: Seriously Unaffordable", "rgba(255, 152, 0, 0.30)"),
+            ("5.1–8.9: Severely Unaffordable", "rgba(229, 115, 115, 0.30)"),
+            ("9.0+: Impossibly Unaffordable", "rgba(183, 28, 28, 0.30)"),
+        ]
 
-        price_income_fig.add_hline(
-            y=4,
-            line_width=2,
-            line_dash="dash",
-            line_color="silver",
-            annotation_text="3.1-4.0: Moderately Unaffordable",
-            annotation_position="bottom right",
-            annotation_bgcolor="rgba(255,255,255,0.7)"
-        )
+        for i, (label, color) in enumerate(affordability_legend):
+            price_income_fig.add_scatter(
+                x=[None],
+                y=[None],  # nothing drawn
+                mode="lines",
+                line=dict(width=10, color=color),
+                name=label,
+                showlegend=True,
+                legendgroup="bands",
+                legendgrouptitle=dict(text="Affordability Scale (PTI Ranges)")
+                if i == 0
+                else None,
+            )
 
-        price_income_fig.add_hrect(
-            y0=3.0, 
-            y1=4.0, 
-            line_width=0, 
-            fillcolor="Yellow", 
-            layer="below", 
-            opacity=0.2
-        )
+        # 2b) Background color bands (no text overlays)
+        bands = [
+            (0.0, 3.0, "rgba(76, 175, 80, 0.30)"),
+            (3.0, 4.0, "rgba(255, 193, 7, 0.30)"),
+            (4.0, 5.0, "rgba(255, 152, 0, 0.30)"),
+            (5.0, 9.0, "rgba(229, 115, 115, 0.30)"),
+        ]
+        ymax = max(price_income["Price_Income_Ratio"].max() + 1, 9.0)
+        bands.append((9.0, ymax, "rgba(183, 28, 28, 0.30)"))
 
-        price_income_fig.add_hline(
-            y=5,
-            line_width=2,
-            line_dash="dash",
-            line_color="silver",
-            annotation_text="4.1-5.0: Seriously Unaffordable",
-            annotation_position="bottom right",
-            annotation_bgcolor="rgba(255,255,255,0.7)"
-        )
+        for y0, y1, fill in bands:
+            price_income_fig.add_hrect(
+                y0=y0,
+                y1=y1,
+                line_width=0,
+                fillcolor=fill,
+                layer="below",
+            )
+            price_income_fig.add_hline(
+                y=y1,
+                line_width=1,
+                line_dash="dash",
+                line_color="silver",
+            )
 
-        price_income_fig.add_hrect(
-            y0=4.0, 
-            y1=5.0, 
-            line_width=0, 
-            fillcolor="Orange", 
-            layer="below", 
-            opacity=0.2
-        )
+        # 2c) Add the metro lines as a separate legend group
+        for i, trace in enumerate(px_fig.data):
+            trace.legendgroup = "metros"
+            if i == 0:
+                trace.legendgrouptitle = dict(text="Metro Areas")
+            price_income_fig.add_trace(trace)
 
-        price_income_fig.add_hline(
-            y=9,
-            line_width=2,
-            line_dash="dash",
-            line_color="silver",
-            annotation_text="5.1-8.9: Severely Unaffordable",
-            annotation_position="bottom right",
-            annotation_bgcolor="rgba(255,255,255,0.7)"
-        )
-
-        price_income_fig.add_hrect(
-            y0=5.0, 
-            y1=9.0, 
-            line_width=0, 
-            fillcolor="Red", 
-            layer="below", 
-            opacity=0.2
-        )
-
-        ymax = price_income["Price_Income_Ratio"].max() + 1
-        if ymax < 9.0:
-            ymax = 10
-        
-        price_income_fig.add_hline(
-            y=ymax,
-            line_width=2,
-            line_dash="dash",
-            line_color="silver",
-            annotation_text="9.0+: Impossibly Unaffordable",
-            annotation_position="bottom right",
-            annotation_bgcolor="rgba(255,255,255,0.7)"
-        )
-
-        price_income_fig.add_hrect(
-            y0=9.0, 
-            y1=ymax,
-            line_width=0, 
-            fillcolor="DarkRed", 
-            layer="below", 
-            opacity=0.2
-        )
-
+        # 3) Hover + layout
         price_income_fig.update_traces(
-            hovertemplate=
-                "<b>%{fullData.name}</b><br>" +
-                "%{customdata[2]}<br>" +
-                "Year: %{x}<br>" +
-                "Ratio: x%{y:.2f}<br>" +
-                "Median Income: $%{customdata[0]:.0f}<br>" +
-                "Median Sale Price: $%{customdata[1]:.0f}<extra></extra>"
+            hovertemplate=(
+                "<b>%{fullData.name}</b><br>"
+                "%{customdata[2]}<br>"
+                "Year: %{x}<br>"
+                "Ratio: %{y:.2f}<br>"
+                "Median Income: $%{customdata[0]:,.0f}<br>"
+                "Median Sale Price: $%{customdata[1]:,.0f}<extra></extra>"
+            ),
+            selector=dict(mode="lines+markers"),  # only metro lines
         )
 
         price_income_fig.update_layout(
-            title={"text": "Price-to-Income (PTI):<br>U.S. Metropolitan Areas from 2012 to 2023", "font": {"size": 28}},
-            yaxis_title="Price-to-Income Ratio",
-            yaxis2=dict(
-            title='Right Y-Axis Label',
-            overlaying='y',
-            side='right'
-            ),
+            title={
+                "text": "Price-to-Income (PTI):<br>U.S. Metropolitan Areas from 2012 to 2023",
+                "font": {"size": 28},
+            },
+            yaxis_title="Price-to-Income(PTI) Ratio",
             xaxis_title="Year",
             hovermode="closest",
             template="plotly_white",
-            legend=dict(title="Metro Area"),
+            legend=dict(
+                title="",
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.02,
+                traceorder="grouped",  # Affordability Scale group first, then Metro Areas
+            ),
             height=600,
-            margin=dict(l=20, r=20, t=120),
-            font=dict(size=14)
+            margin=dict(l=20, r=260, t=120, b=40),
+            font=dict(size=14),
         )
 
         # ====================================

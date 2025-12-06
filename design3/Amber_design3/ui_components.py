@@ -7,7 +7,7 @@ import streamlit as st
 PERSONA_DEFAULTS = {
     "Student": 34000,
     "Young professional": 43000,
-    "Family": 84000,
+    "Family": 105000,
 }
 
 # --- CALLBACKS remain the same ---
@@ -86,7 +86,7 @@ def persona_income_slider(final_income, persona):
         options=persona_options,
         index=persona_options.index(persona),
         key="profile_radio_key",
-        help="We use this to suggest a starting income level. Defaults: Student ($34k), YP ($43k), Family ($84k).",
+        help="We use this to suggest a starting income level. Defaults: Student ($34k), YP ($43k), Family ($105k).",
         horizontal=True
     )
     
@@ -219,7 +219,7 @@ income_control_panel = get_income_and_persona_logic
 #         options=persona_options,
 #         index=persona_options.index(persona),
 #         key="profile_radio_key",
-#         help="We use this to suggest a starting income level. Defaults: Student ($34k), YP ($43k), Family ($84k).",
+#         help="We use this to suggest a starting income level. Defaults: Student ($34k), YP ($43k), Family ($105k).",
 #         horizontal=True
 #     )
     

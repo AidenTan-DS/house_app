@@ -178,5 +178,17 @@ with tab3:
     https://www.chapman.edu/communication/_files/Demographia-International-Housing-Affordability-2025-Edition.pdf
     
     **Household Size**: U.S. Census Bureau. (2023). 2019—2023 ACS 5-Year Narrative Profile.
+    
+    **Part Time College Student Annual Salary**: Part Time College Student Annual Salary ($36,824 Avg | Sep 2020). (n.d.). ZipRecruiter. 
+    https://www.ziprecruiter.com/Salaries/Part-Time-College-Student-Salary
+    
+    **Young Professionals Salary**: Young Professionals. (2025). ZipRecruiter. 
+    https://www.ziprecruiter.com/Salaries/Young-Professionals-Salary
+    
+    **Median Income Table**: Office, U. E. (2025). U.S. Trustee Program/Dept. of Justice. Justice.gov. 
+    https://www.justice.gov/ust/eo/bapcpa/20250401/bci_data/median_income_table.htm
+    
+    **Cartographic Boundary Files**: Cartographic Boundary Files - Shapefile. (2021). The United States Census Bureau. 
+    https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html
     """)
 
