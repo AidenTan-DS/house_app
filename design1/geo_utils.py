@@ -14,8 +14,8 @@ from config_data import (
 )
 from config_data import compute_rankings
 
-# Get the absolute path to the desgin1 directory (where this module is located)
-_DESGIN1_DIR = Path(__file__).parent.resolve()
+# Get the absolute path to the design1 directory (where this module is located)
+_DESIGN1_DIR = Path(__file__).parent.resolve()
 
 
 # =========================
@@ -25,7 +25,7 @@ _DESGIN1_DIR = Path(__file__).parent.resolve()
 def _resolve_shapefile_path(shp_path: str, zip_path: str, label: str) -> str:
     """
     Determines which path to use for loading a shapefile.
-    Converts relative paths to absolute paths based on the desgin1 directory.
+    Converts relative paths to absolute paths based on the design1 directory.
 
     Priority:
         1. Use the uncompressed .shp file if it exists.
@@ -38,9 +38,9 @@ def _resolve_shapefile_path(shp_path: str, zip_path: str, label: str) -> str:
     """
     # Convert relative paths to absolute paths
     if shp_path and not Path(shp_path).is_absolute():
-        shp_path = str(_DESGIN1_DIR / shp_path)
+        shp_path = str(_DESIGN1_DIR / shp_path)
     if zip_path and not Path(zip_path).is_absolute():
-        zip_path = str(_DESGIN1_DIR / zip_path)
+        zip_path = str(_DESIGN1_DIR / zip_path)
     
     # Prefer .shp
     if shp_path and os.path.exists(shp_path):

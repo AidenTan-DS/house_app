@@ -87,6 +87,10 @@ try:
     st.markdown(
         """
         <style>
+        /* Hide navigation bar on story page */
+        header[data-testid="stHeader"] {
+            display: none !important;
+        }
         .block-container {
             padding-top: 3rem !important;
         }
@@ -99,6 +103,12 @@ try:
         """,
         unsafe_allow_html=True,
     )
+    
+    # Return home button at the top
+    col_back, col_spacer = st.columns([2, 20])
+    with col_back:
+        if st.button("🏠 Return Home", use_container_width=True, help="Return to home page", type="secondary"):
+            st.switch_page("pages/intro.py")
 
     # Page title (parent app handles navigation)
     st.title("📖 Housing Affordability Story")

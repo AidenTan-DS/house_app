@@ -1,194 +1,220 @@
 import sys
-import os
 from pathlib import Path
 
-# Add design2 directory to Python path
+# Add utils to path for shared utilities
 project_root = Path(__file__).parent.parent
-design2_path = project_root / "design2"
-sys.path.insert(0, str(design2_path))
+sys.path.insert(0, str(project_root))
 
-# Change to design2 directory to handle relative paths
-original_cwd = os.getcwd()
-os.chdir(str(design2_path))
+from utils.path_utils import setup_design_path, add_to_path
 
-try:
-    import streamlit as st
-    import pandas as pd
-    import plotly.express as px
+# Setup design2 path
+design2_path, _ = setup_design_path("design2")
+add_to_path(design2_path)
 
-    st.title("📊 Time Series Comparison")
-    st.caption("Compare Price-to-Income Ratio across multiple metropolitan areas over time")
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+# Hide navigation bar on design pages
+st.markdown("""
+<style>
+/* Hide navigation bar on design pages */
+header[data-testid="stHeader"] {
+    display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Return home button at the top
+col_back, col_spacer = st.columns([2, 20])
+with col_back:
+    if st.button("🏠 Return Home", use_container_width=True, help="Return to home page", type="secondary"):
+        st.switch_page("pages/intro.py")
+
+st.title("📊 Time Series Comparison")
+st.markdown(
+    """
+    <p style="color: #6b7280; font-size: 0.875rem; margin-top: -1rem; margin-bottom: 1rem;">
+        Compare <span title="PTI Formula: Median Sale Price / Median Household Income. Lower values indicate better affordability." style="cursor: help; text-decoration: underline; text-decoration-style: dotted;">Price-to-Income Ratio</span> across multiple metropolitan areas over time
+    </p>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    """
+    <style>
+    [data-testid="stVirtualDropdown"] > div {
+        height: auto !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+@st.cache_data(show_spinner="Loading required data...", ttl=3600) 
+def load_data():
+    # Load HouseTS.csv from design2 directory using absolute path
+    csv_path = design2_path / "HouseTS.csv"
     
-    st.markdown(
-        """
-        <style>
-        [data-testid="stVirtualDropdown"] > div {
-            height: auto !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    @st.cache_data(show_spinner="Loading required data...") 
-    def load_data():
-        # Load HouseTS.csv from design2 directory
-        csv_path = "HouseTS.csv"
-        
-        try:
-            df = pd.read_csv(csv_path)
-        except Exception as e:
-            st.error(f"Error loading HouseTS.csv: {str(e)}")
-            st.info("Please ensure HouseTS.csv exists in the design2 directory.")
-            return pd.DataFrame(), []
-        
-        # Check if file is a Git LFS pointer file
-        if df.empty or len(df.columns) == 0 or "version https://git-lfs.github.com/spec/v1" in str(df.columns[0]):
-            st.error("⚠️ HouseTS.csv appears to be a Git LFS pointer file.")
-            st.markdown("""
-            **To fix this issue:**
-            1. Install Git LFS: `git lfs install`
-            2. Pull the actual file: `git lfs pull` or `git lfs checkout HouseTS.csv`
-            3. Or download the actual CSV file from the repository
-            
-            The file should be approximately 271 MB in size.
-            """)
-            return pd.DataFrame(), []
-        
-        # Normalize column names - handle both formats
-        # Check for different possible column name formats
-        price_col = None
-        income_col = None
-        
-        # Try to find median_sale_price column (case-insensitive)
-        for col in df.columns:
-            col_lower = col.lower().replace(" ", "_").replace("-", "_")
-            if "median" in col_lower and "sale" in col_lower and "price" in col_lower:
-                price_col = col
-            elif ("per_capita" in col_lower or "capita" in col_lower) and "income" in col_lower:
-                income_col = col
-        
-        # If not found, try exact matches
-        if price_col is None:
-            if "median_sale_price" in df.columns:
-                price_col = "median_sale_price"
-            elif "Median Sale Price" in df.columns:
-                price_col = "Median Sale Price"
-        
-        if income_col is None:
-            if "Per Capita Income" in df.columns:
-                income_col = "Per Capita Income"
-            elif "per_capita_income" in df.columns:
-                income_col = "per_capita_income"
-        
-        if price_col is None or income_col is None:
-            st.error(f"Could not find required columns. Available columns: {list(df.columns)}")
-            st.info("Expected columns: 'median_sale_price' (or 'Median Sale Price') and 'Per Capita Income' (or 'per_capita_income')")
-            return pd.DataFrame(), []
-        
-        # Check for city_full column
-        city_col = None
-        if "city_full" in df.columns:
-            city_col = "city_full"
-        elif "city" in df.columns:
-            # If only city column exists, we might need to use it
-            city_col = "city"
-            st.warning("Using 'city' column instead of 'city_full'. Some city names might be abbreviated.")
-        
-        if city_col is None:
-            st.error(f"Could not find city column. Available columns: {list(df.columns)}")
-            return pd.DataFrame(), []
-        
-        # Filter out rows with invalid data
-        df = df[(df[price_col] > 0) & (df[income_col] > 0)].copy()
-        df = df.fillna(0)
-
-        # Price to Income Data Preparation
-        df["Price_Income_Ratio"] = df[price_col] / (2.54 * df[income_col])
-        
-        # Group by city and year, then aggregate
-        ratio_agg = (
-            df.groupby([city_col, "year"], as_index=False)
-            .agg({
-                "Price_Income_Ratio": "median",
-                price_col: "median",
-                income_col: "median"
-            })
-        )
-        
-        # Rename columns for consistency
-        ratio_agg = ratio_agg.rename(columns={
-            city_col: "city_full",
-            price_col: "median_sale_price",
-            income_col: "Per Capita Income"
-        })
-
-        ratio_agg["Affordability"] = ""
-
-        ratio_agg.loc[ratio_agg["Price_Income_Ratio"] <= 3.0,
-                    "Affordability"] = "Affordable"
-
-        ratio_agg.loc[(ratio_agg["Price_Income_Ratio"] > 3.0) &
-                    (ratio_agg["Price_Income_Ratio"] <= 4.0),
-                    "Affordability"] = "Moderately Unaffordable"
-
-        ratio_agg.loc[(ratio_agg["Price_Income_Ratio"] > 4.0) &
-                    (ratio_agg["Price_Income_Ratio"] <= 5.0),
-                    "Affordability"] = "Seriously Unaffordable"
-
-        ratio_agg.loc[(ratio_agg["Price_Income_Ratio"] > 5.0) &
-                    (ratio_agg["Price_Income_Ratio"] < 9.0),
-                    "Affordability"] = "Severely Unaffordable"
-
-        ratio_agg.loc[ratio_agg["Price_Income_Ratio"] >= 9.0,
-                    "Affordability"] = "Impossibly Unaffordable"
-
-        city_order = sorted(df["city_full"].unique())
-        
-        return ratio_agg, city_order
-
-    data = load_data()
-    ratio_agg = data[0]
-    city_order = data[1]
+    try:
+        df = pd.read_csv(csv_path)
+    except FileNotFoundError:
+        st.error(f"❌ **File Not Found**: HouseTS.csv not found at {csv_path}")
+        st.info("Please ensure HouseTS.csv exists in the design2 directory.")
+        return pd.DataFrame(), []
+    except Exception as e:
+        st.error(f"❌ **Error loading data**: {str(e)}")
+        st.info("Please check that HouseTS.csv is a valid CSV file.")
+        return pd.DataFrame(), []
     
-    # Check if data loaded successfully
-    if ratio_agg.empty or len(city_order) == 0:
-        st.error("⚠️ No data available. Please check that the data files exist and are properly formatted.")
-        st.stop()
-
-    with st.expander("How to Use This Tool", expanded=True, icon="💡"):
+    # Check if file is a Git LFS pointer file
+    if df.empty or len(df.columns) == 0 or "version https://git-lfs.github.com/spec/v1" in str(df.columns[0]):
+        st.error("⚠️ HouseTS.csv appears to be a Git LFS pointer file.")
         st.markdown("""
-                    - 🎯 Pick any metropolitan area from the list above — the chart updates instantly.
-                    - 📊 Compare how affordable house prices are across metropolitan area and over time.
-                    - 🔍 Hover over any point to see detailed numbers for that year.
-
-                    Enjoy exploring! 🚀
-                    """)
-
-    if "selected_cities" not in st.session_state:
-        st.session_state.selected_cities = city_order[:5]
-
-    def reset_cities():
-        st.session_state.selected_cities = city_order[:5]
-
-    col1, col2 = st.columns([1.5,5], vertical_alignment="top")
-    with col1:
-        with st.container(border=True, height="content"):
-            st.markdown("<h2 style='font-size: 24px;'>Select Metropolitan Area</h2>", unsafe_allow_html=True)
-            
-            st.button("Reset to Default", on_click=reset_cities)
-            selected_cities = st.multiselect(
-                "Metro Areas",
-                options=city_order,
-                key="selected_cities"
-            )
-
+        **To fix this issue:**
+        1. Install Git LFS: `git lfs install`
+        2. Pull the actual file: `git lfs pull` or `git lfs checkout HouseTS.csv`
+        3. Or download the actual CSV file from the repository
         
+        The file should be approximately 271 MB in size.
+        """)
+        return pd.DataFrame(), []
+    
+    # Normalize column names - handle both formats
+    # Check for different possible column name formats
+    price_col = None
+    income_col = None
+    
+    # Try to find median_sale_price column (case-insensitive)
+    for col in df.columns:
+        col_lower = col.lower().replace(" ", "_").replace("-", "_")
+        if "median" in col_lower and "sale" in col_lower and "price" in col_lower:
+            price_col = col
+        elif ("per_capita" in col_lower or "capita" in col_lower) and "income" in col_lower:
+            income_col = col
+    
+    # If not found, try exact matches
+    if price_col is None:
+        if "median_sale_price" in df.columns:
+            price_col = "median_sale_price"
+        elif "Median Sale Price" in df.columns:
+            price_col = "Median Sale Price"
+    
+    if income_col is None:
+        if "Per Capita Income" in df.columns:
+            income_col = "Per Capita Income"
+        elif "per_capita_income" in df.columns:
+            income_col = "per_capita_income"
+    
+    if price_col is None or income_col is None:
+        st.error(f"Could not find required columns. Available columns: {list(df.columns)}")
+        st.info("Expected columns: 'median_sale_price' (or 'Median Sale Price') and 'Per Capita Income' (or 'per_capita_income')")
+        return pd.DataFrame(), []
+    
+    # Check for city_full column
+    city_col = None
+    if "city_full" in df.columns:
+        city_col = "city_full"
+    elif "city" in df.columns:
+        # If only city column exists, we might need to use it
+        city_col = "city"
+        st.warning("Using 'city' column instead of 'city_full'. Some city names might be abbreviated.")
+    
+    if city_col is None:
+        st.error(f"Could not find city column. Available columns: {list(df.columns)}")
+        return pd.DataFrame(), []
+    
+    # Filter out rows with invalid data
+    df = df[(df[price_col] > 0) & (df[income_col] > 0)].copy()
+    df = df.fillna(0)
 
-    if len(selected_cities) == 0:
-        with col2:
-            st.warning("Please select at least one metropolitan area.")
-    else:
+    # Price to Income Data Preparation
+    df["Price_Income_Ratio"] = df[price_col] / (2.54 * df[income_col])
+    
+    # Group by city and year, then aggregate
+    ratio_agg = (
+        df.groupby([city_col, "year"], as_index=False)
+        .agg({
+            "Price_Income_Ratio": "median",
+            price_col: "median",
+            income_col: "median"
+        })
+    )
+    
+    # Rename columns for consistency
+    ratio_agg = ratio_agg.rename(columns={
+        city_col: "city_full",
+        price_col: "median_sale_price",
+        income_col: "Per Capita Income"
+    })
+
+    ratio_agg["Affordability"] = ""
+
+    ratio_agg.loc[ratio_agg["Price_Income_Ratio"] <= 3.0,
+                "Affordability"] = "Affordable"
+
+    ratio_agg.loc[(ratio_agg["Price_Income_Ratio"] > 3.0) &
+                (ratio_agg["Price_Income_Ratio"] <= 4.0),
+                "Affordability"] = "Moderately Unaffordable"
+
+    ratio_agg.loc[(ratio_agg["Price_Income_Ratio"] > 4.0) &
+                (ratio_agg["Price_Income_Ratio"] <= 5.0),
+                "Affordability"] = "Seriously Unaffordable"
+
+    ratio_agg.loc[(ratio_agg["Price_Income_Ratio"] > 5.0) &
+                (ratio_agg["Price_Income_Ratio"] < 9.0),
+                "Affordability"] = "Severely Unaffordable"
+
+    ratio_agg.loc[ratio_agg["Price_Income_Ratio"] >= 9.0,
+                "Affordability"] = "Impossibly Unaffordable"
+
+    city_order = sorted(df["city_full"].unique())
+    
+    return ratio_agg, city_order
+
+data = load_data()
+ratio_agg = data[0]
+city_order = data[1]
+
+# Check if data loaded successfully
+if ratio_agg.empty or len(city_order) == 0:
+    st.error("⚠️ No data available. Please check that the data files exist and are properly formatted.")
+    st.stop()
+
+with st.expander("How to Use This Tool", expanded=True, icon="💡"):
+    st.markdown("""
+                - 🎯 Pick any metropolitan area from the list above — the chart updates instantly.
+                - 📊 Compare how affordable house prices are across metropolitan area and over time.
+                - 🔍 Hover over any point to see detailed numbers for that year.
+
+                Enjoy exploring! 🚀
+                """)
+
+if "selected_cities" not in st.session_state:
+    st.session_state.selected_cities = city_order[:5]
+
+def reset_cities():
+    st.session_state.selected_cities = city_order[:5]
+
+col1, col2 = st.columns([1.5,5], vertical_alignment="top")
+with col1:
+    with st.container(border=True, height="content"):
+        st.markdown("<h2 style='font-size: 24px;'>Select Metropolitan Area</h2>", unsafe_allow_html=True)
+        
+        st.button("Reset to Default", on_click=reset_cities)
+        selected_cities = st.multiselect(
+            "Metro Areas",
+            options=city_order,
+            key="selected_cities"
+        )
+
+    
+
+if len(selected_cities) == 0:
+    with col2:
+        st.warning("Please select at least one metropolitan area.")
+else:
         # ===================================
         # Price to Income Ratio Visualization
         # ===================================
@@ -346,9 +372,6 @@ try:
 
         with col2:
             with st.container(border=True):
-                st.plotly_chart(price_income_fig)
-
-finally:
-    # Restore original working directory
-    os.chdir(original_cwd)
+                st.plotly_chart(price_income_fig, use_container_width=True)
+                st.caption("Affordability levels based on Price-to-Income Ratio thresholds from: Cox, Wendell (2025). *Demographia International Housing Affordability, 2025 Edition*. Center for Demographics and Policy.")
 

@@ -19,8 +19,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-# Get the absolute path to the desgin1 directory (where this module is located)
-_DESGIN1_DIR = Path(__file__).parent.resolve()
+# Get the absolute path to the design1 directory (where this module is located)
+_DESIGN1_DIR = Path(__file__).parent.resolve()
 
 # Only needed if you still use Databricks
 #from databricks import sql
@@ -252,7 +252,7 @@ def _load_all_data_local() -> pd.DataFrame:
     # Convert relative path to absolute path
     house_file_path = LOCAL_HOUSE_FILE
     if not Path(house_file_path).is_absolute():
-        house_file_path = str(_DESGIN1_DIR / LOCAL_HOUSE_FILE)
+        house_file_path = str(_DESIGN1_DIR / LOCAL_HOUSE_FILE)
 
     if house_file_path.lower().endswith(".parquet"):
         house = pd.read_parquet(house_file_path)

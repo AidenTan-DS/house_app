@@ -321,18 +321,24 @@ def create_history_chart(zip_hist: pd.DataFrame, metro_avg: float, metric_name: 
     )
     fig.update_layout(
         height=400,  # Increased height for better visibility
-        margin=dict(l=5, r=120, t=25, b=15),  # Increased right margin for long numbers
+        margin=dict(l=60, r=120, t=25, b=50),  # Increased margins for axis labels
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         xaxis=dict(
-            title="",
+            title=dict(
+                text="Year",
+                font=dict(color=text_color, size=12)
+            ),
             gridcolor=grid_color,
             tickfont=dict(color=text_color, size=10),
             showline=True,
             linecolor=grid_color,
         ),
         yaxis=dict(
-            title="",
+            title=dict(
+                text="PTI Ratio" if "PTI" in metric_name else "Median Sale Price ($)",
+                font=dict(color=text_color, size=12)
+            ),
             gridcolor=grid_color,
             tickfont=dict(color=text_color, size=10),
             tickprefix="" if "PTI" in metric_name else "$",

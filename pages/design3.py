@@ -1,15 +1,15 @@
 import sys
-import os
 from pathlib import Path
 
-# Add design3 directory to Python path
+# Add utils to path for shared utilities
 project_root = Path(__file__).parent.parent
-design3_path = project_root / "design3" / "Amber_design3"
-sys.path.insert(0, str(design3_path))
+sys.path.insert(0, str(project_root))
 
-# Change to design3 directory to handle relative paths
-original_cwd = os.getcwd()
-os.chdir(str(design3_path))
+from utils.path_utils import setup_design_path, add_to_path
+
+# Setup design3 path
+design3_path, _ = setup_design_path("design3", "Amber_design3")
+add_to_path(design3_path)
 
 try:
     import streamlit as st
@@ -18,6 +18,7 @@ try:
     import plotly.express as px
     import json
     import time
+    import os
 
     # Import design3 modules
     from zip_module import load_city_zip_data, get_zip_coordinates
@@ -34,9 +35,24 @@ try:
     )
     from ui_components import income_control_panel, persona_income_slider, render_affordability_summary_card
 
+    # Hide navigation bar on design pages
+    st.markdown("""
+    <style>
+    /* Hide navigation bar on design pages */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Return home button at the top
+    col_back, col_spacer = st.columns([2, 20])
+    with col_back:
+        if st.button("🏠 Return Home", use_container_width=True, help="Return to home page", type="secondary"):
+            st.switch_page("pages/intro.py")
+    
     # Page title (parent app handles navigation)
     st.title("💰 Price Affordability Finder")
-    st.caption("Find affordable ZIP codes based on your income and budget preferences")
 
     MAX_ZIP_RATIO_CLIP = 15.0
 
@@ -129,29 +145,64 @@ try:
     st.markdown(
         """
         <div style="border-top: 1px solid #e6e6e6; padding: 10px 0; margin-bottom: 10px;">
-        Use this tool to allow users to compare cities by <strong> PTI (price-to-income ratio) </strong> and select metro areas of interest to explore ZIP-code level details.<br>
-        <strong>PTI Ratio: </strong>
-        <span style="background-color: #f0f2f6; padding: 2px 6px; border-radius: 4px;">
-                <strong>Median Sale Price / Median Household Income</strong>
-        </span><br>
-        <small>Lower ratios indicate better affordability. 
-        In this dashboard, cities with a ratio &le; 3.0 are classified as <strong>"Affordable"</strong>.
-        Those with a ratio between 3.1 to 4.0 inclusive are classified as <strong>"Moderately Unaffordable"</strong>.
-        Those with a ratio between 4.1 to 5.0 inclusive are classified as <strong>"Seriously Unaffordable"</strong>.
-        Those with a ratio between 5.1 to 8.9 inclusive are classified as <strong>"Severely Unaffordable"</strong>.
-        Those with a ratios &ge; 9.0 are classified as <strong>"Impossibly Unaffordable"</strong></small>.
+        <p style="color: #111827; font-size: 0.9rem; margin: 0; font-weight: 600;">
+            <strong>Use this tool to allow users to compare cities by <span class="pti-tooltip">PTI<span class="tooltiptext"><strong>PTI (Price-to-Income Ratio)</strong><br><br>PTI is calculated as: <strong>Median Sale Price ÷ Per Capita Income</strong><br><br>Lower ratios indicate better affordability. A ratio ≤ 3.0 is considered affordable, while higher ratios indicate increasing unaffordability.</span></span> (price-to-income ratio) and select metro areas of interest to explore ZIP-code level details.</strong>
+        </p>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    # Inject CSS
+    # Inject CSS (before intro block so styles are available)
     st.markdown(
         """
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
         <style>
         [data-testid="stAlert"] { display: none !important; }
         .block-container { padding-top: 2rem; }
+        /* PTI Tooltip Styles */
+        .pti-tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted #4B0082;
+            cursor: help;
+            color: #4B0082;
+            font-weight: 700;
+        }
+        .pti-tooltip .tooltiptext {
+            visibility: hidden;
+            width: 280px;
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            font-weight: normal;
+            line-height: 1.4;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .pti-tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        .pti-tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
         </style>
         """,
         unsafe_allow_html=True
@@ -201,11 +252,11 @@ try:
         """, unsafe_allow_html=True)
 
     with st.container():
-        # Explanation text and Year Selector now close together
+        # Explanation text above Year Selector
         st.markdown(""" 
-            The left column allows users to get an idea of how the PTI (price-to-income) ratio differs across the different metro areas. The right column allows a user income details to figure out zip codes in a specific metro area that are affordable. Adjust the year the data is being displayed using the year selector below.
+            The left column allows users to get an idea of how the <span class="pti-tooltip">PTI<span class="tooltiptext"><strong>PTI (Price-to-Income Ratio)</strong><br><br>PTI is calculated as: <strong>Median Sale Price ÷ Per Capita Income</strong><br><br>Lower ratios indicate better affordability. A ratio ≤ 3.0 is considered affordable, while higher ratios indicate increasing unaffordability.</span></span> (price-to-income) ratio differs across the different metro areas. The right column allows a user income details to figure out zip codes in a specific metro area that are affordable. Use the year selector to adjust the data being displayed.
 
-        """)
+        """, unsafe_allow_html=True)
         
         # Render Year Selector below the explanation
         selected_year = year_selector(df, key="year_main_selector")
@@ -478,7 +529,7 @@ try:
 
                         geojson_path = design3_path / "city_geojson" / f"{city_clicked}.geojson"
 
-                        if not os.path.exists(geojson_path):
+                        if not geojson_path.exists():
                             if should_trigger_spinner: loading_message_placeholder.empty()
                             st.error(f"GeoJSON file not found for {city_clicked}. Expected path: {geojson_path}")
                         else:
@@ -633,6 +684,12 @@ try:
         else:
             st.info("No data available to show advanced city comparisons based on current filters.")
 
-finally:
-    # Restore original working directory
-    os.chdir(original_cwd)
+# No need to restore directory - we use absolute paths
+
+except Exception as e:
+    # Catch unexpected errors during module import or initialization,
+    # print the traceback to stderr for debugging and re-raise so the
+    # caller (or streamlit) can surface the error appropriately.
+    import traceback, sys
+    traceback.print_exc()
+    raise

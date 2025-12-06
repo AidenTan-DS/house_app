@@ -1,37 +1,37 @@
 import sys
-import os
 from pathlib import Path
+
+# Add utils to path for shared utilities
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from utils.path_utils import setup_design_path, import_from_path, clear_module_cache
+from utils.error_handling import show_directory_not_found_error, show_missing_files_error
 
 # Global error handler - wrap everything to catch all errors silently
 try:
-    # Add desgin1 directory to Python path
-    project_root = Path(__file__).parent.parent
-    desgin1_path = project_root / "desgin1"
+    # Setup design1 path using shared utility
+    design1_path, project_root = setup_design_path("design1")
     
-    # Check if desgin1 directory exists
-    if not desgin1_path.exists():
+    # Check if design1 directory exists
+    if not design1_path.exists():
         import streamlit as st
-        st.error("❌ **Directory Not Found**: The `desgin1` directory could not be found. Please ensure all required files are present.")
+        show_directory_not_found_error(design1_path, ["config_data.py", "geo_utils.py", "charts.py", "events.py"])
         st.stop()
     
     # Check if required files exist
     required_files = [
-        desgin1_path / "config_data.py",
-        desgin1_path / "geo_utils.py",
-        desgin1_path / "charts.py",
-        desgin1_path / "events.py",
+        design1_path / "config_data.py",
+        design1_path / "geo_utils.py",
+        design1_path / "charts.py",
+        design1_path / "events.py",
     ]
     
     missing_files = [f for f in required_files if not f.exists()]
     if missing_files:
         import streamlit as st
-        st.error(f"❌ **Missing Required Files**: The following files are missing from the `desgin1` directory:\n- " + "\n- ".join([str(f.name) for f in missing_files]))
+        show_missing_files_error(missing_files)
         st.stop()
-
-    # Remove any conflicting paths from sys.path first
-    # This ensures we import from the correct directory
-    if str(desgin1_path) not in sys.path:
-        sys.path.insert(0, str(desgin1_path))
 
     # Remove other design directories from sys.path to avoid conflicts
     story_path = project_root / "story"
@@ -39,19 +39,9 @@ try:
     design3_path = project_root / "design3" / "Amber_design3"
 
     # Remove conflicting paths if they exist
-    paths_to_remove = [str(story_path), str(design2_path), str(design3_path)]
-    for path in paths_to_remove:
-        if path in sys.path:
-            sys.path.remove(path)
-
-    # Ensure desgin1 path is first
-    if sys.path[0] != str(desgin1_path):
-        sys.path.insert(0, str(desgin1_path))
-
-    # Change to desgin1 directory to handle relative paths
-    original_cwd = os.getcwd()
-    os.chdir(str(desgin1_path))
-    _original_cwd = original_cwd  # Store for finally block
+    paths_to_remove = [story_path, design2_path, design3_path]
+    from utils.path_utils import add_to_path
+    add_to_path(design1_path, remove_others=paths_to_remove)
 
     import streamlit as st
     import pandas as pd
@@ -61,38 +51,18 @@ try:
     # Clear any cached modules to avoid conflicts with other pages that have modules with same names
     # Force clear all conflicting modules from cache before importing
     modules_to_clear = ['config_data', 'geo_utils', 'charts', 'events']
-    for module_name in modules_to_clear:
-        # Remove from cache if exists
-        if module_name in sys.modules:
-            del sys.modules[module_name]
-        # Also try removing from submodule cache (e.g., charts.create_city_choropleth)
-        for key in list(sys.modules.keys()):
-            if key.startswith(f"{module_name}."):
-                del sys.modules[key]
+    clear_module_cache(modules_to_clear)
     
-    # Use importlib to import from specific directory
-    import importlib.util
-    
-    # Import modules using file paths to ensure we get the right ones
-    def import_from_path(module_name, file_path):
-        spec = importlib.util.spec_from_file_location(module_name, file_path)
-        if spec is None or spec.loader is None:
-            raise ImportError(f"Cannot load module {module_name} from {file_path}")
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-        spec.loader.exec_module(module)
-        return module
-    
-    # Import from desgin1 directory using file paths to avoid conflicts
+    # Import from design1 directory using file paths to avoid conflicts
     # Import in dependency order: config_data and geo_utils first, then charts and events
-    config_data = import_from_path('config_data', desgin1_path / 'config_data.py')
-    geo_utils = import_from_path('geo_utils', desgin1_path / 'geo_utils.py')
+    config_data = import_from_path('config_data', design1_path / 'config_data.py')
+    geo_utils = import_from_path('geo_utils', design1_path / 'geo_utils.py')
     # Now load charts and events (they depend on config_data and geo_utils)
     # Make sure config_data and geo_utils are in sys.modules so charts can import them
     sys.modules['config_data'] = config_data
     sys.modules['geo_utils'] = geo_utils
-    charts_module = import_from_path('charts', desgin1_path / 'charts.py')
-    events_module = import_from_path('events', desgin1_path / 'events.py')
+    charts_module = import_from_path('charts', design1_path / 'charts.py')
+    events_module = import_from_path('events', design1_path / 'events.py')
     
     # Import what we need directly from the loaded modules
     get_dynamic_css = config_data.get_dynamic_css
@@ -119,12 +89,35 @@ try:
     extract_zip_from_event = events_module.extract_zip_from_event
 
     # =========================================================================
-    # 1. Page config (already set by parent app, but we can override if needed)
+    # 1. Hide navigation bar and add return home button
+    # =========================================================================
+    st.markdown("""
+    <style>
+    /* Hide navigation bar on design pages */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    
+    /* Style return home button */
+    .home-button-container {
+        margin-bottom: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Return home button at the top
+    col_back, col_spacer = st.columns([2, 20])
+    with col_back:
+        if st.button("🏠 Return Home", use_container_width=True, help="Return to home page", type="secondary"):
+            st.switch_page("pages/intro.py")
+    
+    # =========================================================================
+    # 2. Page config (already set by parent app, but we can override if needed)
     # =========================================================================
     # Note: Page config is set in parent app.py, so we don't set it here
 
     # =========================================================================
-    # 2. Session state init (with page-specific keys to avoid conflicts)
+    # 3. Session state init (with page-specific keys to avoid conflicts)
     # =========================================================================
     design1_prefix = "design1_"
     if f"{design1_prefix}view_mode" not in st.session_state:
@@ -135,7 +128,7 @@ try:
         st.session_state[f"{design1_prefix}selected_zip"] = None
 
     # =========================================================================
-    # 3. Load data
+    # 4. Load data
     # =========================================================================
     try:
         df_all = load_all_data()
@@ -144,7 +137,7 @@ try:
             ❌ **Data File Not Found**
             
             Unable to find the data file. Please check:
-            - Data file exists: `desgin1/data/house_ts_agg.csv`
+            - Data file exists: `design1/data/house_ts_agg.csv`
             - File path is correct
             - You have read permissions
             
@@ -193,7 +186,39 @@ try:
     map_style = "carto-positron"
 
     # =========================================================================
-    # 4. Top Control Panel (expanded layout)
+    # 5. Header & intro (moved before control panel)
+    # =========================================================================
+    st.title("🏙️ Metro → ZIP Sale Price/PTI Explorer")
+
+    with st.expander("ℹ️ How to use this app", expanded=False):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(
+                """
+                ### **Navigation**
+                - **Select a year** using the year slider in the control panel
+                - **Select a metric** (PTI or Median Sale Price) from the control panel
+                - **Hover** over metros/ZIPs to preview statistics  
+                - **Click** a metro to view its ZIP codes  
+                - **Click** a ZIP code to see detailed metrics  
+                - Use **Back to All Metros** to return to national view
+                """
+            )
+
+        with col2:
+            st.markdown(
+                """
+            **Metrics**
+            - **Median Sale Price**: The median price of houses sold during a specific time period
+            - **PTI (Price-to-Income Ratio)**: Median Sale Price ÷ Median Household Income
+              - Lower PTI = more affordable
+            """
+            )
+
+    st.markdown("---")
+
+    # =========================================================================
+    # 6. Top Control Panel (moved after title and intro)
     # =========================================================================
     st.markdown("### 🧭 Control Panel")
     control_col1, control_col2, control_col3 = st.columns([2, 2, 3])
@@ -207,8 +232,11 @@ try:
             ["Price-to-Income Ratio (PTI)", "Median Sale Price"],
             index=0,
             horizontal=True,
-            help="PTI: affordability (lower = more affordable)\nPrice: median home sale price",
+            help="PTI Formula: Median Sale Price / Median Household Income\n\nMedian Sale Price: The median price of houses sold during a specific time period",
         )
+    
+    # Update caption after control panel values are set
+    st.caption(f"Year: **{selected_year}** · Metric: **{metric_type}**")
 
     with control_col3:
         if st.session_state[f"{design1_prefix}view_mode"] == "city":
@@ -247,12 +275,12 @@ try:
     st.markdown("---")
 
     # =========================================================================
-    # 5. Apply CSS
+    # 7. Apply CSS
     # =========================================================================
     st.markdown(get_dynamic_css(is_dark_mode), unsafe_allow_html=True)
 
     # =========================================================================
-    # 6. Build metric data for selected_year
+    # 8. Build metric data for selected_year
     # =========================================================================
     df_year = df_all[df_all["year"] == selected_year].copy()
     if df_year.empty:
@@ -315,51 +343,14 @@ try:
 
     metro_yoy = get_metro_yoy(df_all, selected_year, metric_type)
 
-    # =========================================================================
-    # 7. Header & intro
-    # =========================================================================
-    st.title("🏙️ Metro → ZIP Sale Price/PTI Explorer")
-    st.caption(f"Year: **{selected_year}** · Metric: **{metric_type}**")
-
-    with st.expander("ℹ️ How to use this app", expanded=False):
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(
-                """
-                ### **Navigation**
-                - Hover over metros / ZIPs to preview basic statistics  
-                - Use the **Year selector** in the control panel to choose which year to visualize  
-                - Click a **metro** to zoom in and view its ZIP code map  
-                - Click a **ZIP code** to view detailed metrics for the selected year  
-                - Use **Back to All Metros** button to return to the national view  
-                """
-            )
-
-        with col2:
-            st.markdown(
-                """
-            **Metrics**
-            - **Median Sale Price**  
-              - Metro view: average of ZIP-level *monthly median* sale prices (selected year)  
-              - ZIP view: average *monthly median* sale price for this ZIP (selected year)  
-            - **PTI (Price-to-Income Ratio)** = Price ÷ (Income × 2.54)  
-              - Where 2.54 is the median household size (2019 to 2023)  
-              - Metro view: average PTI across ZIPs in the metro  
-              - ZIP view: PTI for this ZIP  
-              - Lower PTI = more affordable
-            """
-            )
-
     current_metro_name = None
     if st.session_state[f"{design1_prefix}selected_city"]:
         row_sel = df_city_map[df_city_map["city"] == st.session_state[f"{design1_prefix}selected_city"]]
         if not row_sel.empty:
             current_metro_name = row_sel["city_full"].iloc[0]
 
-    st.markdown("---")
-
     # =========================================================================
-    # 8. Main view (metro / zip)
+    # 9. Main view (metro / zip)
     # =========================================================================
     if st.session_state[f"{design1_prefix}view_mode"] == "city":
         # --------------------- METRO VIEW ---------------------
@@ -372,31 +363,59 @@ try:
         col_s1, col_s2, col_s3, col_s4, col_s5 = st.columns(5)
 
         with col_s1:
-            st.metric("Total Metros", len(df_city_map))
+            st.metric(
+                "Total Metros", 
+                len(df_city_map),
+                help="Total number of metropolitan areas included in the dataset (30 metro areas across all years)"
+            )
 
         with col_s2:
             avg_val = df_city_map["avg_metric_value"].mean()
             if metric_type == "Price-to-Income Ratio (PTI)":
-                st.metric("Avg PTI", f"{avg_val:.2f}x")
+                st.metric(
+                    "Avg PTI", 
+                    f"{avg_val:.2f}x",
+                    help="Average Price-to-Income Ratio across all metro areas. Formula: Median Sale Price / Median Household Income. Lower values indicate better affordability."
+                )
             else:
-                st.metric("Avg Price", f"${avg_val:,.0f}")
+                st.metric(
+                    "Avg Price", 
+                    f"${avg_val:,.0f}",
+                    help="Average median sale price across all metro areas. The median price of houses sold during the selected time period."
+                )
 
         with col_s3:
             top_metro = df_city_map.loc[df_city_map["avg_metric_value"].idxmax()]
             metro_label_high = top_metro["city_full"]
             if metric_type == "Price-to-Income Ratio (PTI)":
-                st.metric("Highest PTI", f"{top_metro['avg_metric_value']:.2f}x")
+                st.metric(
+                    "Highest PTI", 
+                    f"{top_metro['avg_metric_value']:.2f}x",
+                    help=f"Highest Price-to-Income Ratio among all metro areas. {metro_label_high} has the least affordable housing based on PTI."
+                )
             else:
-                st.metric("Highest Price", f"${top_metro['avg_metric_value']:,.0f}")
+                st.metric(
+                    "Highest Price", 
+                    f"${top_metro['avg_metric_value']:,.0f}",
+                    help=f"Highest median sale price among all metro areas. {metro_label_high} has the most expensive housing."
+                )
             st.caption(f"Metro: **{metro_label_high}**")
 
         with col_s4:
             bottom_metro = df_city_map.loc[df_city_map["avg_metric_value"].idxmin()]
             metro_label_low = bottom_metro["city_full"]
             if metric_type == "Price-to-Income Ratio (PTI)":
-                st.metric("Lowest PTI", f"{bottom_metro['avg_metric_value']:.2f}x")
+                st.metric(
+                    "Lowest PTI", 
+                    f"{bottom_metro['avg_metric_value']:.2f}x",
+                    help=f"Lowest Price-to-Income Ratio among all metro areas. {metro_label_low} has the most affordable housing based on PTI."
+                )
             else:
-                st.metric("Lowest Price", f"${bottom_metro['avg_metric_value']:,.0f}")
+                st.metric(
+                    "Lowest Price", 
+                    f"${bottom_metro['avg_metric_value']:,.0f}",
+                    help=f"Lowest median sale price among all metro areas. {metro_label_low} has the most affordable housing."
+                )
             st.caption(f"Metro: **{metro_label_low}**")
 
         with col_s5:
@@ -408,11 +427,12 @@ try:
                         f"{avg_yoy:+.1f}%",
                         delta="vs last year",
                         delta_color="off",
+                        help="Year-over-Year (YoY): The average percentage change across all metro areas compared to the previous year. Positive values indicate an increase, negative values indicate a decrease."
                     )
                 else:
-                    st.metric("Avg YoY Change", "N/A", delta="No prior year", delta_color="off")
+                    st.metric("Avg YoY Change", "N/A", delta="No prior year", delta_color="off", help="Year-over-Year (YoY): The percentage change compared to the previous year.")
             else:
-                st.metric("Avg YoY Change", "N/A", delta="No prior year", delta_color="off")
+                st.metric("Avg YoY Change", "N/A", delta="No prior year", delta_color="off", help="Year-over-Year (YoY): The percentage change compared to the previous year.")
 
         st.markdown("---")
 
@@ -644,6 +664,7 @@ try:
                                     yoy_change = ((metric_val - prev_val) / prev_val * 100)
                                     main_value = f"{metric_val:.2f}x"
                                     delta_text = f"{yoy_change:+.1f}% YoY"
+                                    # Note: Tooltip for YoY is shown via help parameter in st.metric
                                 else:
                                     main_value = f"{metric_val:.2f}x"
                                     delta_text = "No prior year"
@@ -659,6 +680,7 @@ try:
                                     yoy_change = ((metric_val - prev_val) / prev_val * 100)
                                     main_value = f"${metric_val:,.0f}"
                                     delta_text = f"{yoy_change:+.1f}% YoY"
+                                    # Note: Tooltip for YoY is shown via help parameter in st.metric
                                 else:
                                     main_value = f"${metric_val:,.0f}"
                                     delta_text = "No prior year"
@@ -675,28 +697,40 @@ try:
                             text_color = "#e5e7eb" if is_dark_mode else "#111827"
                             secondary_text_color = "#d1d5db" if is_dark_mode else "#4b5563"
                             
+                            # Tooltip texts
+                            pti_tooltip = "PTI Formula: Median Sale Price / Median Household Income. Lower values indicate better affordability."
+                            price_tooltip = "The median price of houses sold during a specific time period."
+                            yoy_tooltip = "Year-over-Year (YoY): The percentage change compared to the previous year. Positive values indicate an increase, negative values indicate a decrease."
+                            
+                            if metric_type == "Price-to-Income Ratio (PTI)":
+                                rank_tooltip = f"Rank #{rank} out of {rank_total} ZIP codes in this metro area, sorted in descending order (highest to lowest). Top {rank_percentile:.0f}% means this ZIP is more affordable than {rank_percentile:.0f}% of ZIP codes in this metro."
+                                relative_tooltip = f"This ZIP is {abs(pct_diff):.1f}% {'above' if pct_diff > 0 else 'below'} the metro average. {'Less affordable' if pct_diff > 0 else 'More affordable'} than the typical ZIP in this metro area."
+                            else:
+                                rank_tooltip = f"Rank #{rank} out of {rank_total} ZIP codes in this metro area, sorted in descending order (highest to lowest). Top {rank_percentile:.0f}% means this ZIP has a lower median sale price than {rank_percentile:.0f}% of ZIP codes in this metro."
+                                relative_tooltip = f"This ZIP is {abs(pct_diff):.1f}% {'above' if pct_diff > 0 else 'below'} the metro average. {'More expensive' if pct_diff > 0 else 'Less expensive'} than the typical ZIP in this metro area."
+                            
                             st.markdown(
                                 f"""
                                 <div class="metric-card">
-                                    <div style="font-size: 0.8rem; text-transform: uppercase; color: {label_color}; margin-bottom: 0.25rem;">
+                                    <div style="font-size: 0.8rem; text-transform: uppercase; color: {label_color}; margin-bottom: 0.25rem;" title="{'PTI Formula: Median Sale Price / Median Household Income. Lower values indicate better affordability.' if 'PTI' in metric_type else 'The median price of houses sold during a specific time period.'}">
                                         {'PTI Ratio' if 'PTI' in metric_type else 'Median Sale Price'}
                                     </div>
-                                    <div style="font-size: 1.6rem; font-weight: 600; margin-bottom: 0.1rem; color: {text_color};">
+                                    <div style="font-size: 1.6rem; font-weight: 600; margin-bottom: 0.1rem; color: {text_color};" title="{'PTI Formula: Median Sale Price / Median Household Income. Lower values indicate better affordability.' if 'PTI' in metric_type else 'The median price of houses sold during a specific time period.'}">
                                         {main_value}
                                     </div>
-                                    <div style="font-size: 0.85rem; color: {secondary_text_color}; margin-bottom: 0.6rem;">
+                                    <div style="font-size: 0.85rem; color: {secondary_text_color}; margin-bottom: 0.6rem; cursor: help;" title="Year-over-Year (YoY): The percentage change compared to the previous year. Positive values indicate an increase, negative values indicate a decrease.">
                                         {delta_text}
                                     </div>
                                     <div style="font-size: 0.9rem; color: {text_color}; line-height: 1.5;">
-                                        <b>Rank:</b> #{rank} of {rank_total} (descending) · Top {rank_percentile:.0f}% in this metro<br>
-                                        <b>Relative to metro:</b> {diff_label}
+                                        <b>Rank:</b> <span title="{rank_tooltip}" style="cursor: help; text-decoration: underline; text-decoration-style: dotted;">#{rank} of {rank_total} (descending) · Top {rank_percentile:.0f}% in this metro</span><br>
+                                        <b>Relative to metro:</b> <span title="{relative_tooltip}" style="cursor: help; text-decoration: underline; text-decoration-style: dotted;">{diff_label}</span>
                                     </div>
                                 </div>
                                 """,
                                 unsafe_allow_html=True,
                             )
 
-                            st.markdown("#### 📈 Trend")
+                            st.markdown("#### 📈 Historical Trend Over Time")
                             if metric_type == "Price-to-Income Ratio (PTI)":
                                 zip_hist_raw = df_all[
                                     (df_all["city"] == selected_city)
@@ -767,13 +801,25 @@ try:
                 nonzero_values = values[values > 0]
 
                 with col_m1:
-                    st.metric("ZIP Codes (on map)", len(zip_df_city))
+                    st.metric(
+                        "ZIP Codes (on map)", 
+                        len(zip_df_city),
+                        help="Total number of ZIP codes displayed on the map for this metro area in the selected year"
+                    )
 
                 with col_m2:
                     if metric_type == "Price-to-Income Ratio (PTI)":
-                        st.metric("Metro Avg", f"{values.mean():.2f}x")
+                        st.metric(
+                            "Metro Avg", 
+                            f"{values.mean():.2f}x",
+                            help="Average Price-to-Income Ratio across all ZIP codes in this metro area. Formula: Median Sale Price / Median Household Income."
+                        )
                     else:
-                        st.metric("Metro Avg", f"${values.mean():,.0f}")
+                        st.metric(
+                            "Metro Avg", 
+                            f"${values.mean():,.0f}",
+                            help="Average median sale price across all ZIP codes in this metro area. The median price of houses sold during the selected time period."
+                        )
 
                 with col_m3:
                     if metric_type == "Price-to-Income Ratio (PTI)":
@@ -782,6 +828,7 @@ try:
                             f"{nonzero_values.max():.2f}x"
                             if not nonzero_values.empty
                             else "N/A",
+                            help="Highest Price-to-Income Ratio among all ZIP codes in this metro area. Indicates the least affordable ZIP code."
                         )
                     else:
                         st.metric(
@@ -789,6 +836,7 @@ try:
                             f"${nonzero_values.max():,.0f}"
                             if not nonzero_values.empty
                             else "N/A",
+                            help="Highest median sale price among all ZIP codes in this metro area. Indicates the most expensive ZIP code."
                         )
 
                 with col_m4:
@@ -798,6 +846,7 @@ try:
                             f"{nonzero_values.min():.2f}x"
                             if not nonzero_values.empty
                             else "N/A",
+                            help="Lowest Price-to-Income Ratio among all ZIP codes in this metro area. Indicates the most affordable ZIP code."
                         )
                     else:
                         st.metric(
@@ -805,6 +854,7 @@ try:
                             f"${nonzero_values.min():,.0f}"
                             if not nonzero_values.empty
                             else "N/A",
+                            help="Lowest median sale price among all ZIP codes in this metro area. Indicates the most affordable ZIP code."
                         )
 
                 with col_m5:
@@ -816,13 +866,17 @@ try:
                     if not metro_row.empty and "yoy_pct" in metro_row.columns:
                         yoy_val = metro_row["yoy_pct"].iloc[0]
                         if not pd.isna(yoy_val):
-                            st.metric("YoY Change", f"{yoy_val:+.1f}%")
+                            st.metric(
+                                "YoY Change", 
+                                f"{yoy_val:+.1f}%",
+                                help="Year-over-Year (YoY): The percentage change compared to the previous year. Positive values indicate an increase, negative values indicate a decrease."
+                            )
                         else:
-                            st.metric("YoY Change", "N/A")
+                            st.metric("YoY Change", "N/A", help="Year-over-Year (YoY): The percentage change compared to the previous year.")
                     else:
-                        st.metric("YoY Change", "N/A")
+                        st.metric("YoY Change", "N/A", help="Year-over-Year (YoY): The percentage change compared to the previous year.")
                 
-                st.markdown("#### 📈 Change Over Time")
+                st.markdown("#### 📈 Metro-Level Trend Over Time")
                 valid_zips_for_chart = zip_df_city["zip_code_str"].unique()
                 
                 if metric_type == "Price-to-Income Ratio (PTI)":
@@ -854,6 +908,7 @@ try:
                                     },
                                     use_container_width=True,
                                 )
+                                st.caption("Affordability levels based on Price-to-Income Ratio thresholds from: Cox, Wendell (2025). *Demographia International Housing Affordability, 2025 Edition*. Center for Demographics and Policy.")
                         else:
                             st.caption("No historical data available for this metro.")
                     else:
@@ -889,6 +944,8 @@ try:
                                     },
                                     use_container_width=True,
                                 )
+                                if metric_type == "Price-to-Income Ratio (PTI)":
+                                    st.caption("Affordability levels based on Price-to-Income Ratio thresholds from: Cox, Wendell (2025). *Demographia International Housing Affordability, 2025 Edition*. Center for Demographics and Policy.")
                         else:
                             st.caption("No historical data available for this metro.")
                     else:
@@ -896,14 +953,16 @@ try:
 
 except FileNotFoundError as e:
     import streamlit as st
+    from utils.error_handling import show_file_not_found_error
     error_msg = str(e)
-    # Silently ignore errors about desgin1/app.py (which doesn't exist and is intentionally ignored)
-    if "desgin1/app.py" in error_msg or "desgin1\\app.py" in error_msg or "desgin1/app.py" in error_msg.replace("\\", "/"):
-        # This is expected - Streamlit may try to auto-discover this file, but it's intentionally ignored
-        # Just continue loading the page normally
-        pass
-    else:
-        st.error(f"❌ **File Not Found Error**: {error_msg}\n\nPlease ensure all required files are present in the `desgin1` directory.")
+    # Ignore errors about app.py files (they are intentionally removed from design directories)
+    if "app.py" not in error_msg.lower():
+        # Extract file path from error message if possible
+        try:
+            file_path = Path(error_msg.split("'")[1]) if "'" in error_msg else Path(str(e))
+            show_file_not_found_error(file_path, "required file")
+        except:
+            st.error(f"❌ **File Not Found Error**: {error_msg}\n\nPlease ensure all required files are present.")
         st.stop()
 except Exception as e:
     import streamlit as st

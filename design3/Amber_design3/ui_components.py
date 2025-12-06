@@ -78,9 +78,7 @@ def persona_income_slider(final_income, persona):
     """
     
     st.markdown("##### Who are you?")
-    st.markdown("""Input income data using the slider below.
-    The Affordability Summary will tell you the maximum price of a house that would be considered affordable based on the PTI thresholds.
-    The zip code map below color-codes unaffordable zip codes as red, and affordable zip codes as green. """)
+    st.markdown("""Input your income data using the slider below. The Affordability Summary will tell you the maximum price of a house that would be considered affordable based on the PTI threshold of values being ≤3.0 being affordable.""")
     persona_options = list(PERSONA_DEFAULTS.keys())
     
     st.radio(
