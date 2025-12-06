@@ -15,6 +15,22 @@ NAV_STYLES = """
         max-width: min(1440px, 100%) !important;
         padding-left: 3rem !important;
         padding-right: 3rem !important;
+        padding-top: 1rem !important;
+    }
+    
+    /* Reduce top spacing when header is hidden */
+    .main .block-container {
+        padding-top: 1rem !important;
+    }
+    
+    /* Remove extra top margin */
+    #MainMenu {
+        visibility: hidden;
+    }
+    
+    /* Adjust top spacing for content */
+    section[data-testid="stMain"] {
+        padding-top: 0 !important;
     }
     
     /* Navigation container - centered and aligned with content */
@@ -54,12 +70,12 @@ NAV_STYLES = """
         font-weight: 600 !important;
     }
     
-    /* Hide main visualization pages and story from navigation bar - only show Home */
-    /* Use attribute selectors to hide links containing design pages and story */
+    /* Hide all navigation links from navigation bar */
     [data-testid="stTopNavLink"][href*="design1"],
     [data-testid="stTopNavLink"][href*="design2"],
     [data-testid="stTopNavLink"][href*="design3"],
-    [data-testid="stTopNavLink"][href*="story"] {
+    [data-testid="stTopNavLink"][href*="story"],
+    [data-testid="stTopNavLink"][href*="intro"] {
         display: none !important;
         visibility: hidden !important;
         width: 0 !important;
@@ -69,10 +85,19 @@ NAV_STYLES = """
         opacity: 0 !important;
     }
     
-    /* Navigation container background (optional subtle styling) */
-    header[data-testid="stHeader"] {
-        border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    /* Hide entire navigation bar completely */
+    header[data-testid="stHeader"],
+    nav[data-testid="stNavigation"],
+    .rc-overflow,
+    [data-testid="stTopNavLink"] {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        width: 0 !important;
+        opacity: 0 !important;
     }
 </style>
 """
@@ -97,36 +122,32 @@ NAV_SCRIPT = """
     }
     
     function hideDesignPages() {
-        // Hide design pages using multiple methods
+        // Hide entire navigation header
+        const header = document.querySelector('header[data-testid="stHeader"]');
+        if (header) {
+            header.style.setProperty('display', 'none', 'important');
+            header.style.setProperty('visibility', 'hidden', 'important');
+            header.style.setProperty('height', '0', 'important');
+        }
+        
+        // Hide navigation container
+        const navContainer = document.querySelector(NAV_SELECTOR);
+        if (navContainer) {
+            navContainer.style.setProperty('display', 'none', 'important');
+            navContainer.style.setProperty('visibility', 'hidden', 'important');
+        }
+        
+        // Hide all navigation links
         const allLinks = document.querySelectorAll(NAV_LINK_SELECTOR);
         allLinks.forEach(link => {
-            const href = link.getAttribute('href') || '';
-            const text = link.textContent || link.innerText || '';
-            const html = link.innerHTML || '';
-            
-            // Check if this is a design page or story page link
-            const isDesignPage = href.includes('design1') || 
-                                 href.includes('design2') || 
-                                 href.includes('design3') ||
-                                 text.includes('Interactive Map Explorer') ||
-                                 text.includes('Time Series Comparison') ||
-                                 text.includes('Price Affordability Finder') ||
-                                 html.includes('Interactive Map Explorer') ||
-                                 html.includes('Time Series Comparison') ||
-                                 html.includes('Price Affordability Finder');
-            
-            const isStoryPage = href.includes('story') || text.includes('Story');
-            
-            if (isDesignPage || isStoryPage) {
-                link.style.setProperty('display', 'none', 'important');
-                link.style.setProperty('visibility', 'hidden', 'important');
-                link.style.setProperty('width', '0', 'important');
-                link.style.setProperty('height', '0', 'important');
-                link.style.setProperty('padding', '0', 'important');
-                link.style.setProperty('margin', '0', 'important');
-                link.style.setProperty('opacity', '0', 'important');
-                link.style.setProperty('pointer-events', 'none', 'important');
-            }
+            link.style.setProperty('display', 'none', 'important');
+            link.style.setProperty('visibility', 'hidden', 'important');
+            link.style.setProperty('width', '0', 'important');
+            link.style.setProperty('height', '0', 'important');
+            link.style.setProperty('padding', '0', 'important');
+            link.style.setProperty('margin', '0', 'important');
+            link.style.setProperty('opacity', '0', 'important');
+            link.style.setProperty('pointer-events', 'none', 'important');
         });
     }
     
@@ -151,9 +172,10 @@ NAV_SCRIPT = """
             const linkHref = link.getAttribute('href') || '';
             const linkInnerHTML = link.innerHTML || '';
             
-            // Skip if this is a design page or story page (should be handled by hideDesignPages)
+            // Skip if this is a design page, story page, or home page (should be handled by hideDesignPages)
             if (linkHref.includes('design1') || linkHref.includes('design2') || linkHref.includes('design3') || 
-                linkHref.includes('story') || linkText.includes('Story')) {
+                linkHref.includes('story') || linkText.includes('Story') ||
+                linkHref.includes('intro') || linkText.includes('Home')) {
                 return;
             }
             
@@ -215,8 +237,9 @@ st.markdown(NAV_STYLES + NAV_SCRIPT, unsafe_allow_html=True)
 # Define pages for navigation
 # Include all pages in navigation system (required for st.switch_page to work)
 # But only show Home in the navigation bar (Story is accessible from Learn More section)
+# Note: The first page in the list will be the default page when app loads
 pages = [
-    st.Page("pages/intro.py", title="Home", icon="🏠"),
+    st.Page("pages/intro.py", title="Home", icon="🏠"),  # Default home page (first in list)
     # These pages are registered but accessed via cards, not shown in nav
     st.Page("pages/design1.py", title="Interactive Map Explorer", icon="🗺️"),
     st.Page("pages/design2.py", title="Time Series Comparison", icon="📊"),
@@ -225,5 +248,6 @@ pages = [
 ]
 
 # Create navigation at the top
+# The first page (intro.py) will be the default landing page
 pg = st.navigation(pages, position="top")
 pg.run()
