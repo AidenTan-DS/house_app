@@ -2,6 +2,10 @@
 
 An interactive U.S. housing affordability data visualization dashboard exploring 30 major metropolitan areas from 2012-2023.
 
+## 🌐 Live Demo
+
+**Try it online:** [https://houseapp-cqznkr7u5sx3kctd8ui7gs.streamlit.app](https://houseapp-cqznkr7u5sx3kctd8ui7gs.streamlit.app)
+
 ## 📋 Project Structure
 
 ```
