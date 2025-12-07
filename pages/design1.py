@@ -284,7 +284,8 @@ try:
     # =========================================================================
     df_year = df_all[df_all["year"] == selected_year].copy()
     if df_year.empty:
-        st.warning(f"### ⚠️ No data available for {selected_year}")
+        st.warning(f"### ⚠️ No Data Available for {selected_year}")
+        st.info("Please try selecting a different year from the control panel above.")
         st.stop()
 
     if metric_type == "Price-to-Income Ratio (PTI)":
@@ -504,7 +505,8 @@ try:
         # --------------------- ZIP VIEW ---------------------
         selected_city = st.session_state[f"{design1_prefix}selected_city"]
         if not selected_city:
-            st.warning("⚠️ No metro selected. Please use the sidebar search to select a metro.")
+            st.warning("⚠️ **No Metro Selected**")
+            st.info("Please use the 'Quick Metro Search' in the control panel above to select a metro area, or click on a metro on the map.")
             st.stop()
 
         st.markdown(f"### 🗺️ `USA` → `{current_metro_name or selected_city}` → `ZIP Codes`")
@@ -520,7 +522,7 @@ try:
         label = current_metro_name or selected_city
         st.info(
             f"📍 **{label}** ({selected_year}) · {metric_type}  · "
-            f"Click ZIPs to see details · Scroll to zoom"
+            f"Click ZIPs to see details · Scroll to zoom · Double-click to reset"
         )
 
         try:

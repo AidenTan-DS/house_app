@@ -77,7 +77,7 @@ try:
             help="Choose the year for comparison."
         )
 
-    @st.cache_data(ttl=3600*24)
+    @st.cache_data(ttl=3600*24, show_spinner="Loading housing data...")
     def get_data_cached():
         return load_data()
 
@@ -92,10 +92,12 @@ try:
                 history_data.append({"year": yr, "median_ratio": median_ratio})
         return pd.DataFrame(history_data)
 
-    @st.cache_data
+    @st.cache_data(show_spinner="Calculating affordability categories...")
     def calculate_category_proportions_history(dataframe):
         years = sorted(dataframe["year"].unique())
         history_data = []
+        progress_bar = st.progress(0)
+        total_years = len(years)
         
         def classify_strict(ratio):
             if ratio < 3.0: return "Affordable (<3.0)"
@@ -112,7 +114,7 @@ try:
             "Impossibly Unaffordable (>9.0)"
         ]
 
-        for yr in years:
+        for idx, yr in enumerate(years):
             city_data_yr = make_city_view_data(dataframe, annual_income=0, year=yr, budget_pct=30)
             if not city_data_yr.empty and RATIO_COL in city_data_yr.columns:
                 city_data_yr["cat"] = city_data_yr[RATIO_COL].apply(classify_strict)
@@ -123,21 +125,22 @@ try:
                         "category": cat,
                         "percentage": counts.get(cat, 0.0)
                     })
-
+            progress_bar.progress((idx + 1) / total_years)
+        progress_bar.empty()
         return pd.DataFrame(history_data)
 
     # ---------- Load data first (before showing intro) ----------
     df = get_data_cached()
     if df.empty:
         st.error("""
-        ❌ **数据加载失败**
+        ❌ **Data Loading Failed**
         
-        无法加载 Design 3 所需的数据。可能的原因：
-        - 数据文件不存在或路径不正确
-        - 数据文件格式错误
-        - 数据文件为空
+        Unable to load data required for Design 3. Possible reasons:
+        - Data file does not exist or path is incorrect
+        - Data file format is invalid
+        - Data file is empty
         
-        请检查数据文件并重试。
+        Please check the data file and try again.
         """)
         st.stop()
 
@@ -283,15 +286,39 @@ try:
         with st.container(border=True):
             st.markdown("#### Metro Area Affordability Ranking")
 
-            city_data = make_city_view_data(
-                df, 
-                annual_income=final_income,
-                year=selected_year, 
-                budget_pct=30,
-            )
+            # Show progress for data processing
+            with st.spinner("📊 Processing metro area data..."):
+                city_data = make_city_view_data(
+                    df, 
+                    annual_income=final_income,
+                    year=selected_year, 
+                    budget_pct=30,
+                )
+
+            # =====================================================================
+            # FILTER ADDED: Filter bar chart by Max Affordable Price
+            # This section filters city_data to only show metro areas where
+            # Median Sale Price < max_affordable_price (from affordability summary)
+            # =====================================================================
+            # Get the current max affordable price (matches what's shown in summary card)
+            current_income_for_filter = st.session_state.get("income_manual_key", final_income)
+            max_affordable_for_filter = AFFORDABILITY_THRESHOLD * current_income_for_filter
+            
+            # Filter city_data to only include metro areas with Median Sale Price < max_affordable_price
+            if "Median Sale Price" in city_data.columns:
+                city_data = city_data[city_data["Median Sale Price"] < max_affordable_for_filter].copy()
+            # =====================================================================
+            # END OF FILTER ADDITION
+            # =====================================================================
 
             if city_data.empty:
-                st.warning(f"No data available for {selected_year}.")
+                st.warning(f"⚠️ **No Data Available for {selected_year}**")
+                st.info("""
+                This may occur if:
+                - No metro areas have data for the selected year
+                - All metro areas are filtered out by the affordability threshold
+                - Try selecting a different year or adjusting the income filter
+                """)
             else:
                 city_data["affordability_rating"] = city_data[RATIO_COL].apply(classify_affordability)
                 gap = city_data[RATIO_COL] - AFFORDABILITY_THRESHOLD
@@ -608,7 +635,11 @@ try:
                             )
 
                             if should_trigger_spinner: loading_message_placeholder.empty() 
-                            st.plotly_chart(fig_map, use_container_width=True)
+                            st.plotly_chart(
+                                fig_map, 
+                                width='stretch',
+                                config={"scrollZoom": True}
+                            )
                             st.session_state.last_drawn_city = selected_map_metro_full 
                             st.session_state.last_drawn_income = final_income
 

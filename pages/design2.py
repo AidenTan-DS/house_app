@@ -117,7 +117,7 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
 
 @st.cache_data(show_spinner="Loading required data...", ttl=3600) 
@@ -247,7 +247,13 @@ city_order = data[1]
 
 # Check if data loaded successfully
 if ratio_agg.empty or len(city_order) == 0:
-    st.error("⚠️ No data available. Please check that the data files exist and are properly formatted.")
+    st.error("⚠️ **No Data Available**")
+    st.info("""
+    Please check that:
+    - The data file `HouseTS.csv` exists in the `design2` directory
+    - The file is properly formatted and not corrupted
+    - The file contains valid data for the selected time period
+    """)
     st.stop()
 
 with st.expander("How to Use This Tool", expanded=True, icon="💡"):
@@ -291,8 +297,9 @@ with col1:
     
 
 if len(selected_cities) == 0:
-    with col2:
-        st.warning("Please select at least one metropolitan area.")
+        with col2:
+            st.warning("⚠️ **No Metro Areas Selected**")
+            st.info("Please select at least one metropolitan area from the list on the left to view the comparison chart.")
 else:
         # ===================================
         # Price to Income Ratio Visualization

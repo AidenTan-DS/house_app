@@ -44,22 +44,38 @@ def classify_affordability(ratio: float) -> str:
 
 @st.cache_data(ttl=3600*24)
 def load_data() -> pd.DataFrame:
-    """Loads and standardizes data."""
-    script_dir = os.path.dirname(__file__)
-    local_file_path = os.path.join(script_dir, LOCAL_CSV_PATH)
+    """Loads and standardizes data from design2 directory."""
+    from pathlib import Path
+    
+    # Get project root (two levels up from this file: design3/Amber_design3/dataprep.py -> project root)
+    script_dir = Path(__file__).parent  # design3/Amber_design3/
+    project_root = script_dir.parent.parent  # design3/Amber_design3 -> design3 -> project root
+    design2_path = project_root / "design2" / "HouseTS.csv"
     
     df = pd.DataFrame() 
     
-    if os.path.exists(local_file_path):
-        df = pd.read_csv(local_file_path)
-        # st.info("Loaded data from local file: HouseTS.csv")
-    else:
+    # Try to load from design2 directory first
+    if design2_path.exists():
         try:
-            df = pd.read_csv(CSV_URL)
-            st.warning(f"Local file not found. Loaded data from URL: {CSV_URL}")
+            df = pd.read_csv(design2_path)
+            # st.info("Loaded data from design2/HouseTS.csv")
         except Exception as e:
-            st.error(f"🔴 CRITICAL: Failed to load data from local path or URL. Check file path/internet: {e}")
-            return pd.DataFrame() 
+            st.error(f"❌ **Error loading data from design2**: {str(e)}")
+            return pd.DataFrame()
+    else:
+        # Fallback: try local file in design3 directory
+        local_file_path = script_dir / LOCAL_CSV_PATH
+        if local_file_path.exists():
+            df = pd.read_csv(local_file_path)
+            # st.info("Loaded data from local file: HouseTS.csv")
+        else:
+            # Last resort: try URL
+            try:
+                df = pd.read_csv(CSV_URL)
+                st.warning(f"Local file not found. Loaded data from URL: {CSV_URL}")
+            except Exception as e:
+                st.error(f"🔴 CRITICAL: Failed to load data from design2, local path, or URL. Check file path/internet: {e}")
+                return pd.DataFrame() 
 
     if df.empty:
         st.error("🔴 CRITICAL: Data file is empty after loading.")

@@ -133,8 +133,8 @@ with col3:
 st.markdown("---")
 
 # Optional information section - all optional content in one place
-st.markdown("### 📖 Learn More (Optional)")
-st.caption("All optional content is organized here for easy access")
+st.markdown("### 📖 Learn More (Additional)")
+st.caption("All additional content is organized here for easy access")
 
 # Use tabs to organize optional content
 tab1, tab2, tab3 = st.tabs(["🔑 Key Insights", "ℹ️ About This Dashboard", "📚 References"])

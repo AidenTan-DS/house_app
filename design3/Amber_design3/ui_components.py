@@ -78,7 +78,9 @@ def persona_income_slider(final_income, persona):
     """
     
     st.markdown("##### Who are you?")
-    st.markdown("""Input your income data using the slider below. The Affordability Summary will tell you the maximum price of a house that would be considered affordable based on the PTI threshold of values being ≤3.0 being affordable.""")
+    st.markdown("""
+    Input your income data using the slider below. The Affordability Summary will tell you the maximum price of a house that would be considered affordable based on the PTI threshold of values being ≤3.0 being affordable. This will filter the bar graph for metro areas that have median selling prices under that maximum price.
+    """)
     persona_options = list(PERSONA_DEFAULTS.keys())
     
     st.radio(
