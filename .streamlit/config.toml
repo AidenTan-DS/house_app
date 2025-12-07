@@ -5,6 +5,5 @@ base = "light"
 hideTopBar = true
 
 [client]
-showAppMenu = false
 toolbarMode = "minimal"
 
