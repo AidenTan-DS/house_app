@@ -296,7 +296,7 @@ try:
 
     with main_col_left:
         with st.container(border=True):
-            st.markdown("#### Metro Area Affordability Ranking")
+            st.markdown("#### Affordable Metro Areas based on Income")
 
             city_data = make_city_view_data(
                 df, 

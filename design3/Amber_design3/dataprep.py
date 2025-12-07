@@ -9,7 +9,7 @@ import streamlit as st
 from typing import Optional
 
 # --- Define Constants at the TOP LEVEL ---
-LOCAL_CSV_PATH = "HouseTS.csv"
+LOCAL_CSV_PATH = "House_reduced.csv"
 CSV_URL = "https://github.com/yyy1029/House-Browse/releases/download/v1.0/HouseTS.csv"
 RATIO_COL = "price_to_income_ratio"
 RATIO_COL_ZIP = "price_to_income_ratio_zip"
@@ -54,7 +54,7 @@ def load_data() -> pd.DataFrame:
     # Get project root (two levels up from this file: design3/Amber_design3/dataprep.py -> project root)
     script_dir = Path(__file__).parent  # design3/Amber_design3/
     project_root = script_dir.parent.parent  # design3/Amber_design3 -> design3 -> project root
-    design2_path = project_root / "design2" / "HouseTS.csv"
+    design2_path = project_root / "design2" / "House_reduced.csv"
     
     df = pd.DataFrame() 
     
@@ -62,7 +62,7 @@ def load_data() -> pd.DataFrame:
     if design2_path.exists():
         try:
             df = pd.read_csv(design2_path, low_memory=False)
-            logger.info(f"Loaded data from design2/HouseTS.csv: {len(df)} rows")
+            logger.info(f"Loaded data from design2/House_reduced.csv: {len(df)} rows")
         except Exception as e:
             logger.error(f"Error loading data from design2: {str(e)}")
             return pd.DataFrame()
@@ -82,7 +82,7 @@ def load_data() -> pd.DataFrame:
                 df = pd.read_csv(CSV_URL, low_memory=False)
                 logger.warning(f"Local file not found. Loaded data from URL: {len(df)} rows")
             except Exception as e:
-                logger.error(f"CRITICAL: Failed to load data from design2, local path, or URL: {e}")
+                logger.error(f"CRITICAL: Failed to load data from design2/House_reduced.csv, local path, or URL: {e}")
                 return pd.DataFrame() 
 
     if df.empty:

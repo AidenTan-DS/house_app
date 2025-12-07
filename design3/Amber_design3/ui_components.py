@@ -25,7 +25,7 @@ def sync_manual_to_slider():
 def get_income_and_persona_logic():
     
     if "current_persona" not in st.session_state:
-        st.session_state.current_persona = "Young professional"
+        st.session_state.current_persona = "Family"
     
     initial_default = PERSONA_DEFAULTS[st.session_state.current_persona]
 
