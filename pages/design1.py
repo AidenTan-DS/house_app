@@ -108,7 +108,7 @@ try:
     # Return home button at the top
     col_back, col_spacer = st.columns([2, 20])
     with col_back:
-        if st.button("🏠 Return Home", width='stretch', help="Return to home page", type="secondary"):
+        if st.button("🏠 Return Home", use_container_width=True, help="Return to home page", type="secondary"):
             st.switch_page("pages/intro.py")
     
     # =========================================================================
@@ -509,7 +509,7 @@ try:
 
         st.markdown(f"### 🗺️ `USA` → `{current_metro_name or selected_city}` → `ZIP Codes`")
         
-        if st.button("⬅️ Back to All Metros", width='content'):
+        if st.button("⬅️ Back to All Metros", use_container_width=False):
             st.session_state[f"{design1_prefix}view_mode"] = "city"
             st.session_state[f"{design1_prefix}selected_city"] = None
             st.session_state[f"{design1_prefix}selected_zip"] = None
@@ -790,7 +790,7 @@ try:
                                 data=csv,
                                 file_name=f"{selected_city.replace(',', '_')}_{selected_year}_zipdata.csv",
                                 mime="text/csv",
-                                width='stretch',
+                                use_container_width=True,
                             )
 
                 st.markdown("---")

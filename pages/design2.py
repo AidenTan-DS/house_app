@@ -29,7 +29,7 @@ header[data-testid="stHeader"] {
 # Return home button at the top
 col_back, col_spacer = st.columns([2, 20])
 with col_back:
-    if st.button("🏠 Return Home", width='stretch', help="Return to home page", type="secondary"):
+    if st.button("🏠 Return Home", use_container_width=True, help="Return to home page", type="secondary"):
         st.switch_page("pages/intro.py")
 
 st.title("📊 Time Series Comparison")
