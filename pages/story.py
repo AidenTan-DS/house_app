@@ -169,7 +169,7 @@ try:
         with st.container(border=True):
             st.plotly_chart(
                 composite_price_income_index_chart(comp),
-                width='stretch',
+                use_container_width=True,
             )
         
         with st.container(border=True):
@@ -218,7 +218,7 @@ try:
         with st.container(border=True):
             st.plotly_chart(
                 metro_pti_lines(df, focus_year=focus_year),
-                width='stretch',
+                use_container_width=True,
             )
 
         # --- compute top/bottom 7 metros for that year using `summary` ---
@@ -307,7 +307,7 @@ try:
         with st.container(border=True):
             st.plotly_chart(
                 composite_rent_to_income(summary),
-                width='stretch',
+                use_container_width=True,
             )
             
         with st.container(border=True):
@@ -340,7 +340,7 @@ try:
         fig = metro_snapshot_bar(summary)
 
         with st.container(border=True):
-            st.plotly_chart(fig, width='stretch')
+            st.plotly_chart(fig, use_container_width=True)
 
         with st.container(border=True):
             st.markdown(

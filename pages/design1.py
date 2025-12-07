@@ -750,7 +750,7 @@ try:
                                         if fig_hist:
                                             st.plotly_chart(
                                                 fig_hist,
-                                                width="stretch",
+                                                use_container_width=True,
                                                 config={"displayModeBar": False},
                                             )
                                     else:
@@ -775,7 +775,7 @@ try:
                                     if fig_hist:
                                         st.plotly_chart(
                                             fig_hist,
-                                            width="stretch",
+                                            use_container_width=True,
                                             config={"displayModeBar": False},
                                         )
                                 else:
@@ -901,7 +901,7 @@ try:
                             if fig_metro_ts:
                                 st.plotly_chart(
                                     fig_metro_ts,
-                                    width="stretch",
+                                    use_container_width=True,
                                     config={
                                         "displayModeBar": False,
                                         "staticPlot": False,
@@ -936,7 +936,7 @@ try:
                             if fig_metro_ts:
                                 st.plotly_chart(
                                     fig_metro_ts,
-                                    width="stretch",
+                                    use_container_width=True,
                                     config={
                                         "displayModeBar": False,
                                         "staticPlot": False,

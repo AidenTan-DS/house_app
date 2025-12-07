@@ -409,7 +409,7 @@ try:
                             ),
                         )
 
-                        st.plotly_chart(fig_city, width='stretch')
+                        st.plotly_chart(fig_city, use_container_width=True)
 
     # ---------- 4B. Map + Snapshot ----------
     with main_col_right:
@@ -608,7 +608,7 @@ try:
                             )
 
                             if should_trigger_spinner: loading_message_placeholder.empty() 
-                            st.plotly_chart(fig_map, width='stretch')
+                            st.plotly_chart(fig_map, use_container_width=True)
                             st.session_state.last_drawn_city = selected_map_metro_full 
                             st.session_state.last_drawn_income = final_income
 
@@ -675,7 +675,7 @@ try:
                         showlegend=False,
                         margin=dict(l=0, r=0, t=0, b=0)
                     )
-                    st.plotly_chart(fig_cat, width='stretch')
+                    st.plotly_chart(fig_cat, use_container_width=True)
                 
                 st.markdown(
                     "<hr style='margin: 10px 0; border: none; border-top: 1px dashed #eee;'>",

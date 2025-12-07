@@ -424,6 +424,6 @@ else:
 
         with col2:
             with st.container(border=True):
-                st.plotly_chart(price_income_fig, width='stretch')
+                st.plotly_chart(price_income_fig, use_container_width=True)
                 st.caption("Affordability levels based on Price-to-Income Ratio thresholds from: Cox, Wendell (2025). *Demographia International Housing Affordability, 2025 Edition*. Center for Demographics and Policy.")
 
