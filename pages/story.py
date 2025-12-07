@@ -107,7 +107,7 @@ try:
     # Return home button at the top
     col_back, col_spacer = st.columns([2, 20])
     with col_back:
-        if st.button("🏠 Return Home", use_container_width=True, help="Return to home page", type="secondary"):
+        if st.button("🏠 Return Home", width='stretch', help="Return to home page", type="secondary"):
             st.switch_page("pages/intro.py")
 
     # Page title (parent app handles navigation)
@@ -169,7 +169,7 @@ try:
         with st.container(border=True):
             st.plotly_chart(
                 composite_price_income_index_chart(comp),
-                use_container_width=True,
+                width='stretch',
             )
         
         with st.container(border=True):
@@ -218,7 +218,7 @@ try:
         with st.container(border=True):
             st.plotly_chart(
                 metro_pti_lines(df, focus_year=focus_year),
-                use_container_width=True,
+                width='stretch',
             )
 
         # --- compute top/bottom 7 metros for that year using `summary` ---
@@ -277,7 +277,7 @@ try:
         with st.container(border=True):
             st.plotly_chart(
             affordability_bands_with_us_ratio(counts, comp),
-            use_container_width=True,
+            width='stretch',
             )
 
         with st.container(border=True):
@@ -307,7 +307,7 @@ try:
         with st.container(border=True):
             st.plotly_chart(
                 composite_rent_to_income(summary),
-                use_container_width=True,
+                width='stretch',
             )
             
         with st.container(border=True):
@@ -340,7 +340,7 @@ try:
         fig = metro_snapshot_bar(summary)
 
         with st.container(border=True):
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         with st.container(border=True):
             st.markdown(

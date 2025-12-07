@@ -29,7 +29,7 @@ header[data-testid="stHeader"] {
 # Return home button at the top
 col_back, col_spacer = st.columns([2, 20])
 with col_back:
-    if st.button("🏠 Return Home", use_container_width=True, help="Return to home page", type="secondary"):
+    if st.button("🏠 Return Home", width='stretch', help="Return to home page", type="secondary"):
         st.switch_page("pages/intro.py")
 
 st.title("📊 Time Series Comparison")
@@ -424,6 +424,6 @@ else:
 
         with col2:
             with st.container(border=True):
-                st.plotly_chart(price_income_fig, use_container_width=True)
+                st.plotly_chart(price_income_fig, width='stretch')
                 st.caption("Affordability levels based on Price-to-Income Ratio thresholds from: Cox, Wendell (2025). *Demographia International Housing Affordability, 2025 Edition*. Center for Demographics and Policy.")
 

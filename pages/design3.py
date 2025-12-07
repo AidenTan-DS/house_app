@@ -48,7 +48,7 @@ try:
     # Return home button at the top
     col_back, col_spacer = st.columns([2, 20])
     with col_back:
-        if st.button("🏠 Return Home", use_container_width=True, help="Return to home page", type="secondary"):
+        if st.button("🏠 Return Home", width='stretch', help="Return to home page", type="secondary"):
             st.switch_page("pages/intro.py")
     
     # Page title (parent app handles navigation)
@@ -409,7 +409,7 @@ try:
                             ),
                         )
 
-                        st.plotly_chart(fig_city, use_container_width=True)
+                        st.plotly_chart(fig_city, width='stretch')
 
     # ---------- 4B. Map + Snapshot ----------
     with main_col_right:
@@ -547,7 +547,7 @@ try:
                                 [1.0, "rgb(139, 0, 0)"]       # Dark red (very unaffordable)
                             ]
                             
-                            fig_map = px.choropleth_mapbox(
+                            fig_map = px.choropleth_map(
                                 df_zip_map,
                                 geojson=zip_geojson,
                                 locations="zip_str_padded", 
@@ -561,12 +561,12 @@ try:
                                     "zip_str_padded":False,
                                     "color_value": False,
                                 },
-                                mapbox_style="carto-positron",
+                                basemap_style="carto-positron",
                                 center={
                                     "lat": df_zip_map["lat"].mean(),
                                     "lon": df_zip_map["lon"].mean(),
                                 },
-                                zoom=10,
+                                zoom=8,
                                 height=454,
                             )
 
@@ -608,7 +608,7 @@ try:
                             )
 
                             if should_trigger_spinner: loading_message_placeholder.empty() 
-                            st.plotly_chart(fig_map, use_container_width=True)
+                            st.plotly_chart(fig_map, width='stretch')
                             st.session_state.last_drawn_city = selected_map_metro_full 
                             st.session_state.last_drawn_income = final_income
 
@@ -675,7 +675,7 @@ try:
                         showlegend=False,
                         margin=dict(l=0, r=0, t=0, b=0)
                     )
-                    st.plotly_chart(fig_cat, use_container_width=True)
+                    st.plotly_chart(fig_cat, width='stretch')
                 
                 st.markdown(
                     "<hr style='margin: 10px 0; border: none; border-top: 1px dashed #eee;'>",

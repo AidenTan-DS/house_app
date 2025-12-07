@@ -101,7 +101,7 @@ with col1:
         <p style="color: #6b7280; margin: 0 0 1rem 0;">Explore metro areas and drill down to ZIP codes</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Explore Map →", key="map_btn", use_container_width=True, type="primary"):
+    if st.button("Explore Map →", key="map_btn", width='stretch', type="primary"):
         st.switch_page("pages/design1.py")
 
 with col2:
@@ -114,7 +114,7 @@ with col2:
         <p style="color: #6b7280; margin: 0 0 1rem 0;">Compare affordability trends over time</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("View Trends →", key="trends_btn", use_container_width=True, type="primary"):
+    if st.button("View Trends →", key="trends_btn", width='stretch', type="primary"):
         st.switch_page("pages/design2.py")
 
 with col3:
@@ -127,7 +127,7 @@ with col3:
         <p style="color: #6b7280; margin: 0 0 1rem 0;">Find affordable areas based on your income</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Find Areas →", key="finder_btn", use_container_width=True, type="primary"):
+    if st.button("Find Areas →", key="finder_btn", width='stretch', type="primary"):
         st.switch_page("pages/design3.py")
 
 st.markdown("---")
@@ -143,7 +143,7 @@ with tab1:
     st.markdown("""
     Explore the housing affordability story through our narrative visualization.
     """)
-    if st.button("📖 View Full Story", use_container_width=True, type="secondary"):
+    if st.button("📖 View Full Story", width='stretch', type="secondary"):
         st.switch_page("pages/story.py")
 
 with tab2:
