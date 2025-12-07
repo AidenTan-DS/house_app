@@ -111,7 +111,7 @@ try:
             st.switch_page("pages/intro.py")
 
     # Page title (parent app handles navigation)
-    st.title("📖 Housing Affordability Story")
+    st.title("🔑 Key Insights")
     st.caption("Explore the data story behind housing affordability trends across U.S. metropolitan areas")
 
     # ---- load & prep data ----

@@ -137,13 +137,13 @@ st.markdown("### 📖 Learn More (Optional)")
 st.caption("All optional content is organized here for easy access")
 
 # Use tabs to organize optional content
-tab1, tab2, tab3 = st.tabs(["📖 Story", "ℹ️ About This Dashboard", "📚 References"])
+tab1, tab2, tab3 = st.tabs(["🔑 Key Insights", "ℹ️ About This Dashboard", "📚 References"])
 
 with tab1:
     st.markdown("""
     Explore the housing affordability story through our narrative visualization.
     """)
-    if st.button("📖 View Full Story", use_container_width=True, type="secondary"):
+    if st.button("🔑 View Key Insights", use_container_width=True, type="secondary"):
         st.switch_page("pages/story.py")
 
 with tab2:
