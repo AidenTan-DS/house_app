@@ -98,7 +98,7 @@ def persona_income_slider(final_income, persona):
     st.slider(
         "Annual income (rough adjustment)",
         min_value=20000,
-        max_value=200000,
+        max_value=1500000,
         value=st.session_state.income_slider_key,
         step=1000,
         key="income_slider_key",

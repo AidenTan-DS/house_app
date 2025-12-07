@@ -46,6 +46,10 @@ def classify_affordability(ratio: float) -> str:
 def load_data() -> pd.DataFrame:
     """Loads and standardizes data from design2 directory."""
     from pathlib import Path
+    import logging
+    
+    # Don't use st.error/warning in cached functions - use logging or return empty DataFrame
+    logger = logging.getLogger(__name__)
     
     # Get project root (two levels up from this file: design3/Amber_design3/dataprep.py -> project root)
     script_dir = Path(__file__).parent  # design3/Amber_design3/
@@ -57,28 +61,32 @@ def load_data() -> pd.DataFrame:
     # Try to load from design2 directory first
     if design2_path.exists():
         try:
-            df = pd.read_csv(design2_path)
-            # st.info("Loaded data from design2/HouseTS.csv")
+            df = pd.read_csv(design2_path, low_memory=False)
+            logger.info(f"Loaded data from design2/HouseTS.csv: {len(df)} rows")
         except Exception as e:
-            st.error(f"❌ **Error loading data from design2**: {str(e)}")
+            logger.error(f"Error loading data from design2: {str(e)}")
             return pd.DataFrame()
     else:
         # Fallback: try local file in design3 directory
         local_file_path = script_dir / LOCAL_CSV_PATH
         if local_file_path.exists():
-            df = pd.read_csv(local_file_path)
-            # st.info("Loaded data from local file: HouseTS.csv")
+            try:
+                df = pd.read_csv(local_file_path, low_memory=False)
+                logger.info(f"Loaded data from local file: {len(df)} rows")
+            except Exception as e:
+                logger.error(f"Error loading local file: {str(e)}")
+                return pd.DataFrame()
         else:
             # Last resort: try URL
             try:
-                df = pd.read_csv(CSV_URL)
-                st.warning(f"Local file not found. Loaded data from URL: {CSV_URL}")
+                df = pd.read_csv(CSV_URL, low_memory=False)
+                logger.warning(f"Local file not found. Loaded data from URL: {len(df)} rows")
             except Exception as e:
-                st.error(f"🔴 CRITICAL: Failed to load data from design2, local path, or URL. Check file path/internet: {e}")
+                logger.error(f"CRITICAL: Failed to load data from design2, local path, or URL: {e}")
                 return pd.DataFrame() 
 
     if df.empty:
-        st.error("🔴 CRITICAL: Data file is empty after loading.")
+        logger.error("CRITICAL: Data file is empty after loading.")
         return pd.DataFrame()
 
     # --- Standardize Column Names ---

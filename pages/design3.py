@@ -126,17 +126,33 @@ try:
         return pd.DataFrame(history_data)
 
     # ---------- Load data first (before showing intro) ----------
-    df = get_data_cached()
+    try:
+        with st.spinner("Loading housing data..."):
+            df = get_data_cached()
+    except Exception as e:
+        st.error(f"""
+        ❌ **Data Loading Failed**
+        
+        Unable to load data required for Design 3. Error: {str(e)}
+        
+        Possible reasons:
+        - Data file does not exist or path is incorrect
+        - Data file format is invalid
+        - Data file is too large for available memory
+        - Network issues (if loading from URL)
+        
+        Please check the data file and try again.
+        """)
+        st.stop()
+    
     if df.empty:
         st.error("""
         ❌ **Data Loading Failed**
         
-        Unable to load data required for Design 3. Possible reasons:
-        - Data file does not exist or path is incorrect
-        - Data file format is invalid
-        - Data file is empty
-        
-        Please check the data file and try again.
+        The data file is empty or could not be loaded. Please check:
+        - Data file exists in the `design2` directory
+        - Data file is not corrupted
+        - Data file contains valid data
         """)
         st.stop()
 
