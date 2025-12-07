@@ -23,6 +23,8 @@ try:
 
     # Suppress FutureWarning from plotly.express about observed parameter in groupby
     warnings.filterwarnings("ignore", category=FutureWarning, module="plotly.express")
+    # Suppress DeprecationWarning about choropleth_mapbox
+    warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*choropleth_mapbox.*")
 
     # Import design3 modules
     from zip_module import load_city_zip_data, get_zip_coordinates
