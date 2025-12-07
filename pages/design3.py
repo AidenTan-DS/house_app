@@ -15,10 +15,14 @@ try:
     import streamlit as st
     import pandas as pd
     import numpy as np
+    import warnings
     import plotly.express as px
     import json
     import time
     import os
+
+    # Suppress FutureWarning from plotly.express about observed parameter in groupby
+    warnings.filterwarnings("ignore", category=FutureWarning, module="plotly.express")
 
     # Import design3 modules
     from zip_module import load_city_zip_data, get_zip_coordinates

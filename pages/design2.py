@@ -13,8 +13,12 @@ add_to_path(design2_path)
 
 import streamlit as st
 import pandas as pd
+import warnings
 import plotly.express as px
 import plotly.graph_objects as go
+
+# Suppress FutureWarning from plotly.express about observed parameter in groupby
+warnings.filterwarnings("ignore", category=FutureWarning, module="plotly.express")
 
 # Hide navigation bar on design pages
 st.markdown("""
