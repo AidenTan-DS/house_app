@@ -547,7 +547,7 @@ try:
                                 [1.0, "rgb(139, 0, 0)"]       # Dark red (very unaffordable)
                             ]
                             
-                            fig_map = px.choropleth_map(
+                            fig_map = px.choropleth_mapbox(
                                 df_zip_map,
                                 geojson=zip_geojson,
                                 locations="zip_str_padded", 
@@ -561,7 +561,7 @@ try:
                                     "zip_str_padded":False,
                                     "color_value": False,
                                 },
-                                basemap_style="carto-positron",
+                                mapbox_style="carto-positron",
                                 center={
                                     "lat": df_zip_map["lat"].mean(),
                                     "lon": df_zip_map["lon"].mean(),
