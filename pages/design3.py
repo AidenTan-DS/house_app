@@ -77,7 +77,7 @@ try:
             help="Choose the year for comparison."
         )
 
-    @st.cache_data(ttl=3600*24, show_spinner="Loading housing data...")
+    @st.cache_data(ttl=3600*24)
     def get_data_cached():
         return load_data()
 
@@ -92,12 +92,10 @@ try:
                 history_data.append({"year": yr, "median_ratio": median_ratio})
         return pd.DataFrame(history_data)
 
-    @st.cache_data(show_spinner="Calculating affordability categories...")
+    @st.cache_data
     def calculate_category_proportions_history(dataframe):
         years = sorted(dataframe["year"].unique())
         history_data = []
-        progress_bar = st.progress(0)
-        total_years = len(years)
         
         def classify_strict(ratio):
             if ratio < 3.0: return "Affordable (<3.0)"
@@ -114,7 +112,7 @@ try:
             "Impossibly Unaffordable (>9.0)"
         ]
 
-        for idx, yr in enumerate(years):
+        for yr in years:
             city_data_yr = make_city_view_data(dataframe, annual_income=0, year=yr, budget_pct=30)
             if not city_data_yr.empty and RATIO_COL in city_data_yr.columns:
                 city_data_yr["cat"] = city_data_yr[RATIO_COL].apply(classify_strict)
@@ -125,8 +123,6 @@ try:
                         "category": cat,
                         "percentage": counts.get(cat, 0.0)
                     })
-            progress_bar.progress((idx + 1) / total_years)
-        progress_bar.empty()
         return pd.DataFrame(history_data)
 
     # ---------- Load data first (before showing intro) ----------
@@ -286,14 +282,12 @@ try:
         with st.container(border=True):
             st.markdown("#### Metro Area Affordability Ranking")
 
-            # Show progress for data processing
-            with st.spinner("📊 Processing metro area data..."):
-                city_data = make_city_view_data(
-                    df, 
-                    annual_income=final_income,
-                    year=selected_year, 
-                    budget_pct=30,
-                )
+            city_data = make_city_view_data(
+                df, 
+                annual_income=final_income,
+                year=selected_year, 
+                budget_pct=30,
+            )
 
             # =====================================================================
             # FILTER ADDED: Filter bar chart by Max Affordable Price

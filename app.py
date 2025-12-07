@@ -238,16 +238,26 @@ st.markdown(NAV_STYLES + NAV_SCRIPT, unsafe_allow_html=True)
 # Include all pages in navigation system (required for st.switch_page to work)
 # But only show Home in the navigation bar (Story is accessible from Learn More section)
 # Note: The first page in the list will be the default page when app loads
-pages = [
-    st.Page("pages/intro.py", title="Home", icon="🏠"),  # Default home page (first in list)
-    # These pages are registered but accessed via cards, not shown in nav
-    st.Page("pages/design1.py", title="Interactive Map Explorer", icon="🗺️"),
-    st.Page("pages/design2.py", title="Time Series Comparison", icon="📊"),
-    st.Page("pages/design3.py", title="Price Affordability Finder", icon="💰"),
-    st.Page("pages/story.py", title="Story", icon="📖"),
-]
+try:
+    pages = [
+        st.Page("pages/intro.py", title="Home", icon="🏠"),  # Default home page (first in list)
+        # These pages are registered but accessed via cards, not shown in nav
+        st.Page("pages/design1.py", title="Interactive Map Explorer", icon="🗺️"),
+        st.Page("pages/design2.py", title="Time Series Comparison", icon="📊"),
+        st.Page("pages/design3.py", title="Price Affordability Finder", icon="💰"),
+        st.Page("pages/story.py", title="Story", icon="📖"),
+    ]
 
-# Create navigation at the top
-# The first page (intro.py) will be the default landing page
-pg = st.navigation(pages, position="top")
-pg.run()
+    # Create navigation at the top
+    # The first page (intro.py) will be the default landing page
+    pg = st.navigation(pages, position="top")
+    pg.run()
+except Exception as e:
+    st.error(f"❌ **Application Error**: {str(e)}")
+    st.exception(e)
+    st.info("""
+    **Troubleshooting Steps:**
+    1. Check that all page files exist in the `pages/` directory
+    2. Verify that all required dependencies are installed
+    3. Check the Streamlit Cloud logs for more details
+    """)
