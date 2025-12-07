@@ -57,7 +57,7 @@ def _resolve_shapefile_path(shp_path: str, zip_path: str, label: str) -> str:
     )
 
 
-@st.cache_resource(show_spinner="🗺️ Loading ZIP code boundaries...")
+@st.cache_resource(show_spinner="🗺️ Loading ZIP code boundaries...", max_entries=1)
 def load_zcta_shapes() -> gpd.GeoDataFrame:
     """Load ZCTA (ZIP Code Tabulation Area) boundaries."""
     path = _resolve_shapefile_path(ZCTA_SHP_PATH, ZCTA_ZIP_PATH, "ZCTA")
@@ -70,7 +70,7 @@ def load_zcta_shapes() -> gpd.GeoDataFrame:
     return gdf
 
 
-@st.cache_resource(show_spinner="🏙️ Loading metro area boundaries...")
+@st.cache_resource(show_spinner="🏙️ Loading metro area boundaries...", max_entries=1)
 def load_cbsa_shapes() -> gpd.GeoDataFrame:
     """Load CBSA (Core-Based Statistical Area) boundaries."""
     path = _resolve_shapefile_path(CBSA_SHP_PATH, CBSA_ZIP_PATH, "CBSA")
@@ -140,7 +140,7 @@ def resolve_manual_cbsa_name(city: str, city_full: str):
     return None
 
 
-@st.cache_data
+@st.cache_data(ttl=3600, max_entries=30)
 def build_city_cbsa_polygons(
     df_city: pd.DataFrame,
     _cbsa_gdf: gpd.GeoDataFrame,
@@ -155,8 +155,9 @@ def build_city_cbsa_polygons(
         cbsa_gdf["name_lower"] = cbsa_gdf["NAME"].astype(str).str.lower()
 
     # Precompute centroids (EPSG 4326) for nearest-distance fallback
-    cbsa_4326 = cbsa_gdf.to_crs(epsg=4326)
-    centroids = cbsa_4326.geometry.centroid
+    # Project to a projected CRS (e.g., Web Mercator) for accurate centroid calculation
+    cbsa_projected = cbsa_gdf.to_crs(epsg=3857) 
+    centroids = cbsa_projected.geometry.centroid.to_crs(epsg=4326) # Convert back to 4326 for lat/lon
     cbsa_gdf["centroid_lat"] = centroids.y
     cbsa_gdf["centroid_lon"] = centroids.x
 

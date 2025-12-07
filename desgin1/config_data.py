@@ -357,8 +357,8 @@ def compute_yoy(
         df_current["yoy_pct"] = np.nan
         return df_current
 
-    agg_current = df_current.groupby(group_cols, as_index=False).agg({value_col: "mean"})
-    agg_prev = df_prev.groupby(group_cols, as_index=False).agg({value_col: "mean"})
+    agg_current = df_current.groupby(group_cols, as_index=False, observed=True).agg({value_col: "mean"})
+    agg_prev = df_prev.groupby(group_cols, as_index=False, observed=True).agg({value_col: "mean"})
 
     merged = agg_current.merge(
         agg_prev,

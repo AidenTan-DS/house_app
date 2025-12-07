@@ -125,7 +125,7 @@ def composite_series(df: pd.DataFrame) -> pd.DataFrame:
       composite_pti, price_index, income_index, year
     """
     grouped = (
-        df.groupby("date", as_index=False)[
+        df.groupby("date", as_index=False, observed=True)[
             ["median_sale_price", "median_household_income_est", "price_to_income"]
         ]
         .mean()
@@ -160,7 +160,7 @@ def yearly_metro_summary(df: pd.DataFrame) -> pd.DataFrame:
     One row per (city_full, year) summarizing PTI, rent burden
     """
     summary = (
-        df.groupby(["city_full", "year"], as_index=False)
+        df.groupby(["city_full", "year"], as_index=False, observed=True)
         .agg(
             price_to_income=("price_to_income", "mean"),
             rent_to_income=("rent_to_income", "mean"),

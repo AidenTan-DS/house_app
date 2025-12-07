@@ -25,7 +25,7 @@ def load_data():
     
     
     ratio_agg = (
-        df.groupby(["city_full", "year"], as_index=False)
+        df.groupby(["city_full", "year"], as_index=False, observed=True)
         .agg({
             "Price_Income_Ratio": "median",
             "median_sale_price": "median",

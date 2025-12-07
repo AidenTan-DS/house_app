@@ -77,11 +77,11 @@ try:
             help="Choose the year for comparison."
         )
 
-    @st.cache_data(ttl=3600*24)
+    @st.cache_data(ttl=3600, max_entries=1)
     def get_data_cached():
         return load_data()
 
-    @st.cache_data
+    @st.cache_data(ttl=3600, max_entries=1)
     def calculate_median_ratio_history(dataframe):
         years = sorted(dataframe["year"].unique())
         history_data = []
@@ -92,7 +92,7 @@ try:
                 history_data.append({"year": yr, "median_ratio": median_ratio})
         return pd.DataFrame(history_data)
 
-    @st.cache_data
+    @st.cache_data(ttl=3600, max_entries=1)
     def calculate_category_proportions_history(dataframe):
         years = sorted(dataframe["year"].unique())
         history_data = []
@@ -446,7 +446,7 @@ try:
                             ),
                         )
 
-                        st.plotly_chart(fig_city, use_container_width=True)
+                        st.plotly_chart(fig_city, width='stretch')
 
     # ---------- 4B. Map + Snapshot ----------
     with main_col_right:
@@ -716,7 +716,7 @@ try:
                         showlegend=False,
                         margin=dict(l=0, r=0, t=0, b=0)
                     )
-                    st.plotly_chart(fig_cat, use_container_width=True)
+                    st.plotly_chart(fig_cat, width='stretch')
                 
                 st.markdown(
                     "<hr style='margin: 10px 0; border: none; border-top: 1px dashed #eee;'>",

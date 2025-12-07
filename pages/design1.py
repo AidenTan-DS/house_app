@@ -244,7 +244,7 @@ try:
             df_filtered_sidebar = df_all[df_all["year"] == selected_year].copy()
             if not df_filtered_sidebar.empty:
                 df_city_sidebar = (
-                    df_filtered_sidebar.groupby(["city", "city_full"], as_index=False)
+                    df_filtered_sidebar.groupby(["city", "city_full"], as_index=False, observed=True)
                     .agg(avg_median_sale_price=("median_sale_price", "mean"))
                 )
                 metro_list = (
@@ -297,7 +297,7 @@ try:
 
         df_zip_metric = (
             df_year.groupby(
-                ["city", "city_full", "city_clean", "zip_code_str", "year"], as_index=False
+                ["city", "city_full", "city_clean", "zip_code_str", "year"], as_index=False, observed=True
             ).agg(
                 metric_value=("PTI", "mean"),
                 lat=("lat", "mean"),
@@ -306,7 +306,7 @@ try:
         )
 
         df_city = (
-            df_zip_metric.groupby(["city", "city_full", "city_clean"], as_index=False).agg(
+            df_zip_metric.groupby(["city", "city_full", "city_clean"], as_index=False, observed=True).agg(
                 n=("zip_code_str", "count"),
                 avg_metric_value=("metric_value", "mean"),
                 lat=("lat", "mean"),
@@ -322,7 +322,7 @@ try:
 
         df_zip_metric = (
             df_year.groupby(
-                ["city", "city_full", "city_clean", "zip_code_str", "year"], as_index=False
+                ["city", "city_full", "city_clean", "zip_code_str", "year"], as_index=False, observed=True
             ).agg(
                 metric_value=("median_sale_price", "mean"),
                 lat=("lat", "mean"),
@@ -331,7 +331,7 @@ try:
         )
 
         df_city = (
-            df_zip_metric.groupby(["city", "city_full", "city_clean"], as_index=False).agg(
+            df_zip_metric.groupby(["city", "city_full", "city_clean"], as_index=False, observed=True).agg(
                 n=("zip_code_str", "count"),
                 avg_metric_value=("metric_value", "mean"),
                 lat=("lat", "mean"),
@@ -741,7 +741,7 @@ try:
                                 zip_hist_raw = compute_pti(zip_hist_raw)
                                 if not zip_hist_raw.empty:
                                     zip_hist = (
-                                        zip_hist_raw.groupby("year", as_index=False)
+                                        zip_hist_raw.groupby("year", as_index=False, observed=True)
                                         .agg(PTI=("PTI", "mean"))
                                         .sort_values("year")
                                     )
@@ -752,7 +752,7 @@ try:
                                         if fig_hist:
                                             st.plotly_chart(
                                                 fig_hist,
-                                                use_container_width=True,
+                                                width='stretch',
                                                 config={"displayModeBar": False},
                                             )
                                     else:
@@ -766,7 +766,7 @@ try:
                                         & (df_all["zip_code_str"] == active_zip)
                                         & df_all["median_sale_price"].notna()
                                     ]
-                                    .groupby("year", as_index=False)
+                                    .groupby("year", as_index=False, observed=True)
                                     .agg(price=("median_sale_price", "mean"))
                                     .sort_values("year")
                                 )
@@ -887,12 +887,12 @@ try:
                     if not metro_hist_raw.empty:
                         metro_zip_year = (
                             metro_hist_raw.groupby(
-                                ["city", "city_full", "city_clean", "zip_code_str", "year"], as_index=False
+                                ["city", "city_full", "city_clean", "zip_code_str", "year"], as_index=False, observed=True
                             ).agg(PTI=("PTI", "mean"))
                         )
                         metro_zip_year = metro_zip_year[metro_zip_year["zip_code_str"].isin(valid_zips_for_chart)].copy()
                         metro_hist = (
-                            metro_zip_year.groupby("year", as_index=False)
+                            metro_zip_year.groupby("year", as_index=False, observed=True)
                             .agg(PTI=("PTI", "mean"))
                             .sort_values("year")
                         )
@@ -903,7 +903,7 @@ try:
                             if fig_metro_ts:
                                 st.plotly_chart(
                                     fig_metro_ts,
-                                    use_container_width=True,
+                                    width='stretch',
                                     config={
                                         "displayModeBar": False,
                                         "staticPlot": False,
@@ -922,12 +922,12 @@ try:
                     if not metro_hist_raw.empty:
                         metro_zip_year = (
                             metro_hist_raw.groupby(
-                                ["city", "city_full", "city_clean", "zip_code_str", "year"], as_index=False
+                                ["city", "city_full", "city_clean", "zip_code_str", "year"], as_index=False, observed=True
                             ).agg(metric_value=("median_sale_price", "mean"))
                         )
                         metro_zip_year = metro_zip_year[metro_zip_year["zip_code_str"].isin(valid_zips_for_chart)].copy()
                         metro_hist = (
-                            metro_zip_year.groupby("year", as_index=False)
+                            metro_zip_year.groupby("year", as_index=False, observed=True)
                             .agg(metric_value=("metric_value", "mean"))
                             .sort_values("year")
                         )
@@ -938,7 +938,7 @@ try:
                             if fig_metro_ts:
                                 st.plotly_chart(
                                     fig_metro_ts,
-                                    use_container_width=True,
+                                    width='stretch',
                                     config={
                                         "displayModeBar": False,
                                         "staticPlot": False,

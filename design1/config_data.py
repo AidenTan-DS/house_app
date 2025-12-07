@@ -270,7 +270,7 @@ def _load_all_data_local() -> pd.DataFrame:
 
     return _standardize_house_df(house)
 
-@st.cache_data(show_spinner="📊 Loading housing data...")
+@st.cache_data(show_spinner="📊 Loading housing data...", ttl=3600, max_entries=1)
 def load_all_data() -> pd.DataFrame:
     """
     Public data loading function used by app.py.
@@ -357,8 +357,8 @@ def compute_yoy(
         df_current["yoy_pct"] = np.nan
         return df_current
 
-    agg_current = df_current.groupby(group_cols, as_index=False).agg({value_col: "mean"})
-    agg_prev = df_prev.groupby(group_cols, as_index=False).agg({value_col: "mean"})
+    agg_current = df_current.groupby(group_cols, as_index=False, observed=True).agg({value_col: "mean"})
+    agg_prev = df_prev.groupby(group_cols, as_index=False, observed=True).agg({value_col: "mean"})
 
     merged = agg_current.merge(
         agg_prev,
@@ -370,7 +370,7 @@ def compute_yoy(
     merged["yoy_pct"] = (merged["yoy_change"] / merged[f"{value_col}_prev"] * 100).round(1)
     return merged
 
-@st.cache_data
+@st.cache_data(ttl=3600, max_entries=10)
 def get_metro_yoy(df_all_input: pd.DataFrame, current_year: int, metric_type_input: str) -> pd.DataFrame:
     """
     Cached helper to compute metro-level year-over-year changes

@@ -42,7 +42,7 @@ def metro_pti_lines(df: pd.DataFrame, focus_year: int) -> go.Figure:
 
     # 1) Aggregate ZIPs → metro-level series
     df_metro = (
-        df.groupby(["city_full", "year", "date"], as_index=False)["price_to_income"]
+        df.groupby(["city_full", "year", "date"], as_index=False, observed=True)["price_to_income"]
         .mean()
         .dropna(subset=["price_to_income"])
     )
@@ -50,7 +50,7 @@ def metro_pti_lines(df: pd.DataFrame, focus_year: int) -> go.Figure:
     # 2) Compute snapshot for the focus year (metro-level PTI)
     snapshot = (
         df_metro[df_metro["year"] == focus_year]
-        .groupby("city_full", as_index=False)["price_to_income"]
+        .groupby("city_full", as_index=False, observed=True)["price_to_income"]
         .mean()
         .dropna(subset=["price_to_income"])
     )
@@ -104,7 +104,7 @@ def affordability_bands_with_us_ratio(counts: pd.DataFrame,
 
     # Composite US PTI by year
     us_pti = (
-        comp.groupby("year", as_index=False)["composite_pti"]
+        comp.groupby("year", as_index=False, observed=True)["composite_pti"]
         .mean()
         .rename(columns={"composite_pti": "us_pti"})
     )
@@ -307,7 +307,7 @@ def affordability_bands_with_us_ratio(counts: pd.DataFrame,
 
 def composite_rent_to_income(summary: pd.DataFrame) -> go.Figure:
     comp = (
-        summary.groupby("year", as_index=False)["rent_to_income"]
+        summary.groupby("year", as_index=False, observed=True)["rent_to_income"]
         .mean()
         .rename(columns={"rent_to_income": "composite_rti"})
     )

@@ -120,7 +120,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-@st.cache_data(show_spinner="Loading required data...", ttl=3600) 
+@st.cache_data(show_spinner="Loading required data...", ttl=3600, max_entries=1) 
 def load_data():
     # Load HouseTS.csv from design2 directory using absolute path
     csv_path = design2_path / "HouseTS.csv"
@@ -202,7 +202,7 @@ def load_data():
     
     # Group by city and year, then aggregate
     ratio_agg = (
-        df.groupby([city_col, "year"], as_index=False)
+        df.groupby([city_col, "year"], as_index=False, observed=True)
         .agg({
             "Price_Income_Ratio": "median",
             price_col: "median",
@@ -431,6 +431,6 @@ else:
 
         with col2:
             with st.container(border=True):
-                st.plotly_chart(price_income_fig, use_container_width=True)
+                st.plotly_chart(price_income_fig, width='stretch')
                 st.caption("Affordability levels based on Price-to-Income Ratio thresholds from: Cox, Wendell (2025). *Demographia International Housing Affordability, 2025 Edition*. Center for Demographics and Policy.")
 

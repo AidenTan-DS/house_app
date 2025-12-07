@@ -122,7 +122,7 @@ def make_city_view_data(df_full: pd.DataFrame, annual_income: float, year: int, 
     df_year = df_full[df_full['year'] == year].copy()
 
     # Aggregate by the GeoJSON code ('city_geojson_code')
-    city_agg = df_year.groupby("city_geojson_code").agg(
+    city_agg = df_year.groupby("city_geojson_code", observed=True).agg(
         median_sale_price=("median_sale_price", "median"), 
         per_capita_income=("per_capita_income", "median"), 
         city_full=("city_full", "first"), 
@@ -159,7 +159,7 @@ def make_city_history(df: pd.DataFrame, city_name: str) -> pd.DataFrame:
     tmp["price_to_income_ratio_by_year"] = tmp["median_sale_price"] / denom
 
     hist = (
-        tmp.groupby("year", as_index=False)
+        tmp.groupby("year", as_index=False, observed=True)
         .agg(
             {
                 "median_sale_price": "median",
